@@ -309,30 +309,70 @@ class Matcher:
         return False
 
     def __augment_seed_at_subphase_boundary(self) -> None:
+        self.augment()
+
+    def augment(self) -> int:
+        """Run the subphase-boundary augmenting-path search over M_1.
+
+        Public API.  Walks every vertex of :math:`S = A \\cup B` and,
+        for each vertex currently unmatched in the seed matching, runs an
+        alternating-path search via :meth:`try_augment`.  Returns the
+        number of augmenting paths successfully applied.
+
+        Returns:
+            The number of vertices of :math:`S` whose seed-match status
+            was repaired by an augmenting path.
+        """
         if self.system is None or not self.matchings:
-            return
+            return 0
 
         matched_in_seed: set[Vertex] = set()
         for u, v in self.seed_matching:
             matched_in_seed.add(u)
             matched_in_seed.add(v)
 
+        augmented = 0
         for s in self.system.S:
             if s not in matched_in_seed:
-                self.__try_augment_seed(s, matched_in_seed)
+                if self.try_augment(s, matched_in_seed):
+                    augmented += 1
+                    matched_in_seed = {v for e in self.seed_matching for v in e}
+        return augmented
 
-    def __try_augment_seed(self, start: Vertex, matched_in_seed: set[Vertex]) -> bool:
+    def try_augment(self, start: Vertex, matched: set[Vertex]) -> bool:
+        """Try to augment the seed matching along an alternating path.
+
+        Public API.  Delegates to :func:`axiom.augment.augment`.  See
+        that function for the algorithm.
+
+        Args:
+            start: An unmatched vertex where the search begins.
+            matched: The set of vertices currently matched in the seed.
+
+        Returns:
+            ``True`` if an augmenting path was found and applied.
+        """
         from axiom.augment import augment
-
-        def is_matched(v: Vertex) -> bool:
-            return v in matched_in_seed
 
         return augment(
             self.seed_matching,
             self.graph.neighbors,
             start,
-            is_matched,
+            matched.__contains__,
         )
+
+    def flip(self, path: list[Vertex]) -> None:
+        """Flip alternating edges in ``path`` in the seed matching.
+
+        Public API.  Delegates to :func:`axiom.augment.flip`.  Exposed
+        so callers can experiment with custom augmentation policies.
+
+        Args:
+            path: An alternating vertex path of even length >= 2.
+        """
+        from axiom.augment import flip
+
+        flip(self.seed_matching, path)
 
     def insert(self, u: Vertex, v: Vertex) -> None:
         """Insert edge ``(u, v)`` and repair the maximal matching.
