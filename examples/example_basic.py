@@ -2,20 +2,17 @@
 
 from __future__ import annotations
 
-import sys
 import os
+import sys
 
-_repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_src = os.path.join(_repo_root, "src")
-if _src not in sys.path:
-    sys.path.insert(0, _src)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from axiom import DynamicMaximalMatching
+from axiom import Matcher
 
 
 def main() -> None:
     n = 10
-    algo = DynamicMaximalMatching(n, mode="basic")
+    algo = Matcher(n, mode="basic")
 
     # Build a path
     for i in range(n - 1):

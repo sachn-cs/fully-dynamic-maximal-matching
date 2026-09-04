@@ -1,8 +1,8 @@
-"""Minimal demo of the FDMM algorithm.
+"""Minimal demo of the Axiom algorithm.
 
 Usage::
 
-    python scripts/demo.py [--n N] [--mode {basic,multilevel}]
+    python scripts/demo.py [--n N] [--mode {basic,tiered,multilevel}]
 
 Example::
 
@@ -17,13 +17,10 @@ import random
 import sys
 import time
 
-_repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_src = os.path.join(_repo_root, "src")
-if _src not in sys.path:
-    sys.path.insert(0, _src)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from axiom.core import Matcher  # noqa: E402
-from axiom.simulation import random_update_sequence  # noqa: E402
+from axiom.simulation import random_updates  # noqa: E402
 
 
 def run_demo(n: int, mode: str, num_updates: int, seed: int = 42) -> int:
@@ -31,18 +28,18 @@ def run_demo(n: int, mode: str, num_updates: int, seed: int = 42) -> int:
 
     Args:
         n: Number of vertices.
-        mode: ``"basic"`` or ``"multilevel"``.
+        mode: ``"basic"`` or ``"tiered"`` (or deprecated ``"multilevel"``).
         num_updates: Total number of update operations.
         seed: Random seed for reproducibility.
 
     Returns:
         0 on success, 1 on failure.
     """
-    print(f"=== FDMM Demo: n={n}, mode={mode}, updates={num_updates} ===\n")
+    print(f"=== Axiom Demo: n={n}, mode={mode}, updates={num_updates} ===\n")
 
     algo = Matcher(n, mode=mode)
     rng = random.Random(seed)
-    updates = list(random_update_sequence(n, num_updates, rng))
+    updates = list(random_updates(n, num_updates, rng))
 
     start = time.perf_counter()
     for op, u, v in updates:
@@ -68,13 +65,13 @@ def run_demo(n: int, mode: str, num_updates: int, seed: int = 42) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="FDMM Demo")
+    parser = argparse.ArgumentParser(description="Axiom Demo")
     parser.add_argument("--n", type=int, default=20, help="Number of vertices")
     parser.add_argument(
         "--mode",
-        choices=["basic", "multilevel"],
+        choices=["basic", "tiered", "multilevel"],
         default="basic",
-        help="Algorithm mode",
+        help="Algorithm mode (basic = single-level, tiered = multi-level)",
     )
     parser.add_argument(
         "--updates", type=int, default=200, help="Number of update operations"

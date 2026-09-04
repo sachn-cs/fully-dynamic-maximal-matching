@@ -17,13 +17,13 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from axiom.core import Matcher
-from axiom.simulation import random_update_sequence
+from axiom.simulation import random_updates
 
 
 def bench(n: int, mode: str, updates: int, seed: int) -> dict[str, float]:
     algo = Matcher(n, mode=mode)
     rng = random.Random(seed)
-    seq = list(random_update_sequence(n, updates, rng))
+    seq = list(random_updates(n, updates, rng))
 
     start = time.perf_counter()
     for op, u, v in seq:

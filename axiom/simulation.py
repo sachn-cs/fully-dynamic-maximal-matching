@@ -38,7 +38,7 @@ fields are the canonical endpoints.
 """
 
 
-def random_update_sequence(
+def random_updates(
     n: int,
     steps: int,
     rng: random.Random,
@@ -84,13 +84,13 @@ def random_update_sequence(
         yielded += 1
 
 
-def replay_updates(algo: Matcher, updates: list[Update]) -> None:
+def replay(algo: Matcher, updates: list[Update]) -> None:
     """Replay a prepared update sequence on ``algo``.
 
     Args:
         algo: The dynamic matcher.
         updates: List of operations, e.g. as produced by
-            :func:`random_update_sequence`.
+            :func:`random_updates`.
 
     Raises:
         ValueError: If any entry in ``updates`` is not a recognised

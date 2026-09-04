@@ -22,7 +22,7 @@ import multiprocessing
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from axiom.simulation import random_update_sequence
+from axiom.simulation import random_updates
 
 if TYPE_CHECKING:
     pass
@@ -72,7 +72,7 @@ def worker(
 
     algo = Matcher(n, mode=mode)
     rng = __import__("random").Random(seed)
-    seq = list(random_update_sequence(n, updates, rng))
+    seq = list(random_updates(n, updates, rng))
 
     start = time.perf_counter()
     for op, u, v in seq:

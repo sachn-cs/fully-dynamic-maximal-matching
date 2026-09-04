@@ -1,7 +1,7 @@
-"""Command-line interface for the FDMM reproduction.
+"""Command-line interface for Axiom.
 
-A thin wrapper around :class:`Matcher` plus the
-:func:`random_update_sequence` generator.  It is useful as a smoke
+A thin wrapper around :class:`axiom.core.Matcher` plus the
+:func:`axiom.simulation.random_updates` generator. Useful as a smoke
 test: it runs a fixed number of random updates, asserts maximality
 after each one, and prints timing statistics on exit.
 
@@ -25,29 +25,27 @@ import sys
 import time
 
 from axiom.core import Matcher
-from axiom.simulation import random_update_sequence
+from axiom.simulation import random_updates
 
 
 def main(argv: list[str] | None = None) -> int:
     """Entry point for the ``axiom`` console script.
 
     Args:
-        argv: Optional list of arguments.  When ``None`` (the default)
+        argv: Optional list of arguments. When ``None`` (the default)
             :mod:`argparse` reads from ``sys.argv``.
 
     Returns:
         Process exit code: ``0`` on success, ``1`` if maximality was
         violated at any step.
     """
-    parser = argparse.ArgumentParser(
-        description="Fully Dynamic Maximal Matching (FDMM) demo"
-    )
+    parser = argparse.ArgumentParser(description="Axiom fully dynamic maximal matching demo")
     parser.add_argument("--n", type=int, default=20, help="Number of vertices")
     parser.add_argument(
         "--mode",
-        choices=["basic", "multilevel"],
+        choices=["basic", "tiered", "multilevel"],
         default="basic",
-        help="Algorithm mode",
+        help="Algorithm mode (basic = single-level, tiered = multi-level)",
     )
     parser.add_argument(
         "--updates", type=int, default=200, help="Number of update operations"
@@ -57,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
 
     algo = Matcher(args.n, mode=args.mode)
     rng = random.Random(args.seed)
-    updates = list(random_update_sequence(args.n, args.updates, rng))
+    updates = list(random_updates(args.n, args.updates, rng))
 
     start = time.perf_counter()
     for op, u, v in updates:

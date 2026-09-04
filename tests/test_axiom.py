@@ -16,7 +16,7 @@ from axiom.graph import Adjacency
 from axiom.invariant import check_maximal_matching
 from axiom.core import Matcher
 from axiom.matching import partners, greedy, partner_in
-from axiom.simulation import random_update_sequence, replay_updates as replay
+from axiom.simulation import random_updates, replay as replay
 from axiom.types import canonical
 from axiom.hierarchy import Hierarchy
 from axiom.system import System, build
@@ -879,16 +879,16 @@ class TestHierarchy:
 class TestSequence:
     """Tests for :mod:`axiom.simulation`."""
 
-    def test_random_update_sequence(self) -> None:
+    def test_random_updates(self) -> None:
         rng = random.Random(7)
-        updates = list(random_update_sequence(5, 20, rng))
+        updates = list(random_updates(5, 20, rng))
         assert len(updates) == 20
         for op, u, v in updates:
             assert op in ("insert", "delete")
             assert 0 <= u < 5
             assert 0 <= v < 5
 
-    def test_replay_updates(self) -> None:
+    def test_replay(self) -> None:
         algo = Matcher(4, mode="basic")
         updates = [("insert", 0, 1), ("insert", 1, 2), ("delete", 0, 1)]
         replay(algo, updates)
@@ -949,7 +949,7 @@ class TestRefactor:
         rng = random_mod.Random(0)
         n = 30
         algo = Matcher(n, mode="basic")
-        for op in random_update_sequence(n, 300, rng):
+        for op in random_updates(n, 300, rng):
             if op[0] == "insert":
                 algo.insert(op[1], op[2])
             else:
@@ -1055,7 +1055,7 @@ class TestCoverage:
             algo.insert(e[0], e[1])
         assert algo.maximal()
         # Then a random walk.
-        for op in random_update_sequence(n, 100, rng):
+        for op in random_updates(n, 100, rng):
             if op[0] == "insert":
                 algo.insert(op[1], op[2])
             else:
@@ -1068,7 +1068,7 @@ class TestCoverage:
 
         rng = random_mod.Random(7)
         n = 40
-        updates = list(random_update_sequence(n, 100, rng))
+        updates = list(random_updates(n, 100, rng))
         algo = Matcher(n, mode="basic")
         replay(algo, updates)
         assert algo.maximal()
