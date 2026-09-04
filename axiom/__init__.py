@@ -1,4 +1,4 @@
-"""maxmatch: A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching.
+"""axiom: A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching.
 
 This package is a pure-Python reproduction of the deterministic fully
 dynamic maximal matching algorithm of Chuzhoy, Khanna, and Song
@@ -26,8 +26,8 @@ The supporting modules provide:
   :func:`alternating_path`, and :func:`flip_path`.
 * :func:`check_maximal_matching` and :func:`check_z_system_invariants`
   -- standalone invariant validators used by the test suite.
-* :class:`UpdateAccountant` and the :mod:`maxmatch.simulation` /
-  :mod:`maxmatch.parallel` modules -- engineering utilities for empirical
+* :class:`UpdateAccountant` and the :mod:`axiom.simulation` /
+  :mod:`axiom.parallel` modules -- engineering utilities for empirical
   benchmarking and reproducibility.
 
 Reference:
@@ -35,8 +35,8 @@ Reference:
     Algorithm for Fully Dynamic Maximal Matching*.  arXiv:2605.00797v1.
 """
 
-from maxmatch.accounting import UpdateAccountant
-from maxmatch.coloring import (
+from axiom.accounting import UpdateAccountant
+from axiom.coloring import (
     GreedyColorer,
     VizingColorer,
     alternating_path,
@@ -47,19 +47,19 @@ from maxmatch.coloring import (
     missing_colors,
     recolor_for_edge,
 )
-from maxmatch.graph import DynamicGraph
-from maxmatch.invariants import check_maximal_matching, check_z_system_invariants
-from maxmatch.matcher import MaximalMatcher
-from maxmatch.matching import build_partner_map, greedy_maximal_matching, partner_of
-from maxmatch.parallel import compare_modes, run_parallel_benchmarks
-from maxmatch.simulation import random_update_sequence, replay_updates
-from maxmatch.types import Edge, EdgeColorer, Graph, Matching, Vertex, canonical_edge
-from maxmatch.visualize import (
+from axiom.graph import DynamicGraph
+from axiom.invariants import check_maximal_matching, check_z_system_invariants
+from axiom.matcher import MaximalMatcher
+from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
+from axiom.parallel import compare_modes, run_parallel_benchmarks
+from axiom.simulation import random_update_sequence, replay_updates
+from axiom.types import Edge, EdgeColorer, Graph, Matching, Vertex, canonical_edge
+from axiom.visualize import (
     visualize_graph_adjacency,
     visualize_matching,
     visualize_system,
 )
-from maxmatch.z_system import (
+from axiom.z_system import (
     MultiLevelSystem,
     ZSubgraphSystem,
     build_multi_level_system,

@@ -11,14 +11,14 @@ import random
 
 import pytest
 
-from maxmatch.coloring import VizingColorer
-from maxmatch.graph import DynamicGraph
-from maxmatch.invariants import check_maximal_matching
-from maxmatch.matcher import MaximalMatcher
-from maxmatch.matching import build_partner_map, greedy_maximal_matching, partner_of
-from maxmatch.simulation import random_update_sequence, replay_updates
-from maxmatch.types import canonical_edge
-from maxmatch.z_system import MultiLevelSystem, ZSubgraphSystem, build_z_system
+from axiom.coloring import VizingColorer
+from axiom.graph import DynamicGraph
+from axiom.invariants import check_maximal_matching
+from axiom.matcher import MaximalMatcher
+from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
+from axiom.simulation import random_update_sequence, replay_updates
+from axiom.types import canonical_edge
+from axiom.z_system import MultiLevelSystem, ZSubgraphSystem, build_z_system
 
 # ------------------------------------------------------------------
 # Graph layer
@@ -26,7 +26,7 @@ from maxmatch.z_system import MultiLevelSystem, ZSubgraphSystem, build_z_system
 
 
 class TestDynamicGraph:
-    """Tests for :class:`maxmatch.graph.DynamicGraph`."""
+    """Tests for :class:`axiom.graph.DynamicGraph`."""
 
     def test_empty_graph(self) -> None:
         g = DynamicGraph(5)
@@ -176,7 +176,7 @@ class TestDynamicGraph:
 
 
 class TestEdgeColoring:
-    """Tests for :mod:`maxmatch.coloring`."""
+    """Tests for :mod:`axiom.coloring`."""
 
     def _is_proper(self, graph: DynamicGraph, coloring: dict) -> bool:
         for u in range(graph.n):
@@ -294,7 +294,7 @@ class TestEdgeColoring:
 
 
 class TestMatchingHelpers:
-    """Tests for :mod:`maxmatch.matching`."""
+    """Tests for :mod:`axiom.matching`."""
 
     def test_greedy_maximal_matching(self) -> None:
         g = DynamicGraph(4)
@@ -327,7 +327,7 @@ class TestMatchingHelpers:
 
 
 class TestZSubgraphSystem:
-    """Tests for :class:`maxmatch.z_system.ZSubgraphSystem`."""
+    """Tests for :class:`axiom.z_system.ZSubgraphSystem`."""
 
     def test_basic_properties(self) -> None:
         g = DynamicGraph(6)
@@ -438,7 +438,7 @@ class TestZSubgraphSystem:
 
 
 class TestBuildZSystem:
-    """Tests for :func:`maxmatch.z_system.build_z_system`."""
+    """Tests for :func:`axiom.z_system.build_z_system`."""
 
     def test_build_on_empty_graph(self) -> None:
         g = DynamicGraph(4)
@@ -488,7 +488,7 @@ class TestBuildZSystem:
 
 
 class TestMaximalMatcher:
-    """End-to-end tests for :class:`maxmatch.matcher.MaximalMatcher`."""
+    """End-to-end tests for :class:`axiom.matcher.MaximalMatcher`."""
 
     def test_basic_init(self) -> None:
         algo = MaximalMatcher(10, mode="basic")
@@ -774,8 +774,8 @@ class TestMaximalMatcher:
 
     def test_rematch_u_no_phantom_edge_from_stale_list(self) -> None:
         """Regression: a stale lambda list must not produce a phantom edge."""
-        from maxmatch.matcher import MaximalMatcher
-        from maxmatch.types import canonical_edge
+        from axiom.matcher import MaximalMatcher
+        from axiom.types import canonical_edge
 
         algo = MaximalMatcher(4, mode="basic")
         algo.insert_edge(0, 1)
@@ -807,7 +807,7 @@ class TestMaximalMatcher:
         algo.insert_edge(1, 2)
         algo.rebuild_basic()
         # Monkey-patch abb_edge_color to return an invalid color.
-        import maxmatch.dynamic_matching as dm
+        import axiom.dynamic_matching as dm
 
         original_color = dm.abb_edge_color
 
@@ -828,7 +828,7 @@ class TestMaximalMatcher:
 
 
 class TestMultiLevelSystem:
-    """Tests for :class:`maxmatch.z_system.MultiLevelSystem`."""
+    """Tests for :class:`axiom.z_system.MultiLevelSystem`."""
 
     def test_empty(self) -> None:
         g = DynamicGraph(4)
@@ -854,7 +854,7 @@ class TestMultiLevelSystem:
             mls.level_1_invariant_I3()
 
     def test_check_multi_level_i3_returns_false(self) -> None:
-        from maxmatch.invariants import check_multi_level_i3
+        from axiom.invariants import check_multi_level_i3
 
         g = DynamicGraph(0)
         mls = MultiLevelSystem(graph=g, k=1)
@@ -867,7 +867,7 @@ class TestMultiLevelSystem:
 
 
 class TestSimulation:
-    """Tests for :mod:`maxmatch.simulation`."""
+    """Tests for :mod:`axiom.simulation`."""
 
     def test_random_update_sequence(self) -> None:
         rng = random.Random(7)

@@ -10,7 +10,7 @@ _src = os.path.join(_repo_root, "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-from maxmatch import DynamicMaximalMatching
+from axiom import DynamicMaximalMatching
 
 
 def main() -> None:

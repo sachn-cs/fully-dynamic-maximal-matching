@@ -20,8 +20,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from maxmatch.matcher import MaximalMatcher
-    from maxmatch.z_system import ZSubgraphSystem
+    from axiom.matcher import MaximalMatcher
+    from axiom.z_system import ZSubgraphSystem
 
 
 def visualize_system(system: ZSubgraphSystem, width: int = 60) -> str:

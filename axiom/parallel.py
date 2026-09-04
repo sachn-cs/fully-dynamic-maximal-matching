@@ -22,7 +22,7 @@ import multiprocessing
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from maxmatch.simulation import random_update_sequence
+from axiom.simulation import random_update_sequence
 
 if TYPE_CHECKING:
     pass
@@ -68,7 +68,7 @@ def run_benchmark_worker(
     """
     import time
 
-    from maxmatch.matcher import MaximalMatcher
+    from axiom.matcher import MaximalMatcher
 
     algo = MaximalMatcher(n, mode=mode)
     rng = __import__("random").Random(seed)

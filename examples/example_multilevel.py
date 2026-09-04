@@ -10,8 +10,8 @@ _src = os.path.join(_repo_root, "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-from maxmatch import DynamicMaximalMatching
-from maxmatch.simulation import random_update_sequence
+from axiom import DynamicMaximalMatching
+from axiom.simulation import random_update_sequence
 import random
 
 

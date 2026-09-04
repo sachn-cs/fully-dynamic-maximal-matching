@@ -25,10 +25,10 @@ import random
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
-from maxmatch.types import Vertex
+from axiom.types import Vertex
 
 if TYPE_CHECKING:
-    from maxmatch.matcher import MaximalMatcher
+    from axiom.matcher import MaximalMatcher
 
 Update = tuple[str, Vertex, Vertex]
 """Type of one operation in a simulated trace.

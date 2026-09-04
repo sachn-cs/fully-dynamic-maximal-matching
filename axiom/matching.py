@@ -11,7 +11,7 @@ Responsibilities:
       scan (used as a baseline and as a fallback when repair fails).
     * Verify maximality in :math:`O(n + m)` by checking every vertex.
     * Provide :math:`O(|M|)` partner lookups and :math:`O(1)` partner
-      maps used by the dynamic update code in :mod:`maxmatch.matcher`.
+      maps used by the dynamic update code in :mod:`axiom.matcher`.
 
 Assumptions:
     * The graph may be empty; every helper tolerates ``n == 0``.
@@ -21,7 +21,7 @@ Assumptions:
 
 from __future__ import annotations
 
-from maxmatch.types import Graph, Matching, Vertex, canonical_edge
+from axiom.types import Graph, Matching, Vertex, canonical_edge
 
 
 def greedy_maximal_matching(graph: Graph) -> Matching:

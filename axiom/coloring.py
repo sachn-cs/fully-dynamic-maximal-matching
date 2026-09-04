@@ -38,7 +38,7 @@ Limitations:
 
 from __future__ import annotations
 
-from maxmatch.types import Color, Coloring, Edge, Graph, Vertex, canonical_edge
+from axiom.types import Color, Coloring, Edge, Graph, Vertex, canonical_edge
 
 
 class VizingColoringError(RuntimeError):

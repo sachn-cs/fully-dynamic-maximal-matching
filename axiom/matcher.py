@@ -6,7 +6,7 @@ Both the basic :math:`\tilde O(n^{2/3})` version and the multi-level
 :math:`n^{1/2+o(1)}` version are provided.
 
 Responsibilities:
-    * Own the live :class:`maxmatch.graph.DynamicGraph` and the maintained
+    * Own the live :class:`axiom.graph.DynamicGraph` and the maintained
       maximal matching.
     * Keep an up-to-date :math:`z`-system (or :math:`k`-level system) and
       the auxiliary directed graph :math:`H`.
@@ -36,19 +36,19 @@ from __future__ import annotations
 import math
 from collections import deque
 
-from maxmatch.accounting import UpdateAccountant
-from maxmatch.coloring import GreedyColorer
-from maxmatch.graph import DynamicGraph
-from maxmatch.invariants import check_maximal_matching
-from maxmatch.matching import build_partner_map, greedy_maximal_matching, partner_of
-from maxmatch.types import (
+from axiom.accounting import UpdateAccountant
+from axiom.coloring import GreedyColorer
+from axiom.graph import DynamicGraph
+from axiom.invariants import check_maximal_matching
+from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
+from axiom.types import (
     EdgeColorer,
     Graph,
     Matching,
     Vertex,
     canonical_edge,
 )
-from maxmatch.z_system import MultiLevelSystem, ZSubgraphSystem, build_z_system
+from axiom.z_system import MultiLevelSystem, ZSubgraphSystem, build_z_system
 
 
 class MaximalMatcher:

@@ -31,7 +31,7 @@ References:
 
 Assumptions:
     * Vertex labels are dense integers ``0 .. n-1`` (a property inherited
-      from :class:`maxmatch.graph.Graph`).
+      from :class:`axiom.graph.Graph`).
     * The system is freshly constructed via :func:`build_z_system`; it is
       the caller's responsibility to maintain :math:`\Lambda` and
       :math:`L` thereafter (or to invoke :meth:`build_lambda_and_L`).
@@ -48,7 +48,7 @@ from collections import deque
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
-from maxmatch.types import Edge, Graph, Matching, Vertex, canonical_edge
+from axiom.types import Edge, Graph, Matching, Vertex, canonical_edge
 
 
 @dataclass
@@ -361,7 +361,7 @@ class MultiLevelSystem:
         :math:`R_1`.  The exact constant is not provided in the paper excerpt,
         so this method raises :class:`NotImplementedError` to prevent silent
         false positives.  Callers that need a boolean answer should use
-        :func:`maxmatch.invariants.check_multi_level_i3`, which converts the
+        :func:`axiom.invariants.check_multi_level_i3`, which converts the
         error into ``False``.
 
         Raises:

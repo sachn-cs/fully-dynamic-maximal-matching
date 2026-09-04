@@ -10,7 +10,7 @@ algorithm.
 
 Example::
 
-    $ maxmatch --n 50 --mode basic --updates 1000 --seed 7
+    $ axiom --n 50 --mode basic --updates 1000 --seed 7
     Completed 1000 updates in 0.08s
     Final edges: 463
     Matching size: 25
@@ -24,12 +24,12 @@ import random
 import sys
 import time
 
-from maxmatch.matcher import MaximalMatcher
-from maxmatch.simulation import random_update_sequence
+from axiom.matcher import MaximalMatcher
+from axiom.simulation import random_update_sequence
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point for the ``maxmatch`` console script.
+    """Entry point for the ``axiom`` console script.
 
     Args:
         argv: Optional list of arguments.  When ``None`` (the default)

@@ -21,8 +21,8 @@ Mathematical background:
 
 from __future__ import annotations
 
-from maxmatch.types import Graph, Matching, Vertex
-from maxmatch.z_system import MultiLevelSystem, ZSubgraphSystem
+from axiom.types import Graph, Matching, Vertex
+from axiom.z_system import MultiLevelSystem, ZSubgraphSystem
 
 
 def check_z_system_invariants(system: ZSubgraphSystem) -> bool:

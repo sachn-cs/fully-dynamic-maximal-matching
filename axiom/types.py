@@ -1,4 +1,4 @@
-"""Shared type aliases and protocols used throughout the maxmatch package.
+"""Shared type aliases and protocols used throughout the axiom package.
 
 This module collects the minimal vocabulary used by every other module so
 that downstream code can refer to a single canonical type definition
@@ -19,7 +19,7 @@ Design notes:
 
 Assumptions:
     * Vertex labels are dense and consecutive starting at ``0``; see
-      :class:`maxmatch.graph.DynamicGraph` for the corresponding invariant.
+      :class:`axiom.graph.DynamicGraph` for the corresponding invariant.
 
 Limitations:
     * No support for parallel edges or self-loops.  Callers must filter
@@ -77,7 +77,7 @@ class Graph(Protocol):
     """Protocol defining the interface for graph implementations.
 
     Any graph used by the matching algorithm must implement this protocol.
-    The default implementation is :class:`maxmatch.graph.DynamicGraph`.
+    The default implementation is :class:`axiom.graph.DynamicGraph`.
     """
 
     @property
@@ -150,8 +150,8 @@ class EdgeColorer(Protocol):
 
     Any edge coloring implementation must produce a proper coloring using
     at most delta + 1 colors.  Two implementations are provided:
-    :class:`maxmatch.coloring.GreedyColorer` and
-    :class:`maxmatch.coloring.VizingColorer`.
+    :class:`axiom.coloring.GreedyColorer` and
+    :class:`axiom.coloring.VizingColorer`.
     """
 
     def color(self, graph: Graph, delta: int) -> Coloring:

@@ -14,9 +14,9 @@ Responsibilities:
 
 Interactions:
     * Used as the storage layer by the dynamic matcher in
-      :mod:`maxmatch.matcher`.
-    * The greedy matching helpers in :mod:`maxmatch.matching` read only.
-    * The :mod:`maxmatch.z_system` module reads adjacency when reconstructing
+      :mod:`axiom.matcher`.
+    * The greedy matching helpers in :mod:`axiom.matching` read only.
+    * The :mod:`axiom.z_system` module reads adjacency when reconstructing
       :math:`\Lambda` and :math:`L` lists.
 
 Thread-safety:
@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from maxmatch.types import Edge, Vertex
+from axiom.types import Edge, Vertex
 
 
 class DynamicGraph:
