@@ -54,7 +54,7 @@ When using FDMM in production:
 
 This security policy applies to:
 
-- The `fdmm` Python package
+- The `maxmatch` Python package
 - The source code in this repository
 - CI/CD workflows
 
