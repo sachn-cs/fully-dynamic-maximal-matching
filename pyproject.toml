@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "maxmatch"
-version = "0.4.1"
-description = "A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching — Python reproduction of arXiv:2605.00797v1."
+name = "axiom"
+version = "0.5.0"
+description = "A Faster Deterministic Fully Dynamic Maximal Matching Algorithm — pure-Python reproduction of Chuzhoy, Khanna, and Song (arXiv:2605.00797v1, STOC 2026)."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
-    {name = "Sachin"},
+    {name = "Sachin", email = "sachncs@gmail.com"},
 ]
 keywords = [
     "algorithm",
@@ -38,6 +38,7 @@ classifiers = [
 Homepage = "https://github.com/sachncs/fully-dynamic-maximal-matching"
 Repository = "https://github.com/sachncs/fully-dynamic-maximal-matching"
 Issues = "https://github.com/sachncs/fully-dynamic-maximal-matching/issues"
+Documentation = "https://github.com/sachncs/fully-dynamic-maximal-matching/blob/master/docs/index.md"
 Changelog = "https://github.com/sachncs/fully-dynamic-maximal-matching/blob/master/CHANGELOG.md"
 
 [project.optional-dependencies]
@@ -50,10 +51,10 @@ dev = [
 ]
 
 [project.scripts]
-maxmatch = "maxmatch.cli:main"
+axiom = "axiom.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["maxmatch*"]
+include = ["axiom*"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -64,6 +65,7 @@ show_error_codes = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+addopts = "-ra"
 
 [tool.ruff]
 target-version = "py310"
@@ -82,7 +84,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["maxmatch"]
+known-first-party = ["axiom"]
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/*.py" = ["E501"]
