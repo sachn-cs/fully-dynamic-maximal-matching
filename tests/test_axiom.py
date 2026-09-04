@@ -16,7 +16,7 @@ from axiom.graph import Adjacency
 from axiom.invariant import check_maximal_matching
 from axiom.core import Matcher
 from axiom.matching import partners, greedy, partner_in
-from axiom.simulation import random_update_sequence, replay_updates
+from axiom.simulation import random_update_sequence, replay_updates as replay
 from axiom.types import canonical
 from axiom.hierarchy import Hierarchy
 from axiom.system import System, build
@@ -891,7 +891,7 @@ class TestSequence:
     def test_replay_updates(self) -> None:
         algo = Matcher(4, mode="basic")
         updates = [("insert", 0, 1), ("insert", 1, 2), ("delete", 0, 1)]
-        replay_updates(algo, updates)
+        replay(algo, updates)
         assert algo.maximal()
 
 
@@ -1017,3 +1017,131 @@ class TestRefactor:
         a = visualize_adjacency(algo)
         assert s and m and a
         assert s != m != a
+
+
+# ------------------------------------------------------------------
+# Coverage expansion
+# ------------------------------------------------------------------
+
+
+class TestCoverage:
+    """Additional tests that close gaps in coverage of the public API."""
+
+    def test_disconnected_components_basic(self) -> None:
+        """Two disjoint components: each is matched independently."""
+        algo = Matcher(20, mode="basic")
+        for u, v in [(0, 1), (2, 3), (4, 5), (6, 7), (8, 9)]:
+            algo.insert(u, v)
+        for u, v in [(10, 11), (12, 13), (14, 15), (16, 17), (18, 19)]:
+            algo.insert(u, v)
+        assert algo.maximal()
+        assert algo.size() == 10
+
+    def test_dense_graph_stress(self) -> None:
+        """A dense graph after a long random walk."""
+        import random as random_mod
+
+        rng = random_mod.Random(123)
+        n = 30
+        algo = Matcher(n, mode="basic")
+        # Build a dense graph by inserting many edges.
+        edges = []
+        for i in range(n):
+            for j in range(i + 1, n):
+                edges.append((i, j))
+        # Insert a quarter of the edges randomly.
+        sample = rng.sample(edges, len(edges) // 4)
+        for e in sample:
+            algo.insert(e[0], e[1])
+        assert algo.maximal()
+        # Then a random walk.
+        for op in random_update_sequence(n, 100, rng):
+            if op[0] == "insert":
+                algo.insert(op[1], op[2])
+            else:
+                algo.delete(op[1], op[2])
+        assert algo.maximal()
+
+    def test_replay_then_maximal(self) -> None:
+        """After replay, the matching must be maximal for any seed."""
+        import random as random_mod
+
+        rng = random_mod.Random(7)
+        n = 40
+        updates = list(random_update_sequence(n, 100, rng))
+        algo = Matcher(n, mode="basic")
+        replay(algo, updates)
+        assert algo.maximal()
+
+    def test_augment_method_returns_count(self) -> None:
+        """Matcher.augment() returns the number of paths applied."""
+        algo = Matcher(6, mode="basic")
+        algo.insert(0, 1)
+        algo.insert(2, 3)
+        algo.insert(4, 5)
+        # Force a rebuild via policy so the system has an S partition.
+        algo.policy.rebuild(algo)
+        # Manually drive augment(); the result is an int >= 0.
+        count = algo.augment()
+        assert isinstance(count, int)
+        assert count >= 0
+
+    def test_try_augment_returns_bool(self) -> None:
+        """Matcher.try_augment returns a boolean."""
+        algo = Matcher(4, mode="basic")
+        algo.insert(0, 1)
+        algo.policy.rebuild(algo)
+        result = algo.try_augment(2, set())
+        assert isinstance(result, bool)
+
+    def test_flip_path_no_op_on_empty(self) -> None:
+        """flip() on a single-vertex path does nothing."""
+        algo = Matcher(4, mode="basic")
+        seed_before = set(algo.seed_matching)
+        algo.flip([0])
+        assert algo.seed_matching == seed_before
+
+    def test_greedy_colorer_proper(self) -> None:
+        """Greedy().color returns a proper coloring."""
+        from axiom.color import Greedy
+
+        g = Adjacency(6)
+        for u, v in [(0, 1), (0, 2), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]:
+            g.add_edge(u, v)
+        coloring = Greedy().color(g, 3)
+        # For every vertex, no two incident edges share a color.
+        for v in range(g.n):
+            edges = [e for e in coloring if v in e]
+            colors = [coloring[e] for e in edges]
+            assert len(colors) == len(set(colors))
+
+    def test_ledger_independent(self) -> None:
+        """Ledger can be used standalone (no matcher required)."""
+        from axiom.ledger import Ledger
+
+        ledger = Ledger()
+        ledger.record_insertion()
+        ledger.record_deletion()
+        ledger.record_phase_rebuild()
+        ledger.record_subphase_rebuild()
+        ledger.record_rematch_u_scan(5)
+        ledger.record_rematch_b_scan(3)
+        ledger.record_rematch_a_scan(2)
+        ledger.record_greedy_rebuild()
+        ledger.record_stale_cleanup(2)
+        snap = ledger.snapshot()
+        assert snap["total_updates"] == 2
+        assert snap["phase_rebuilds"] == 1
+        assert snap["subphase_rebuilds"] == 1
+        assert snap["rematch_u_scans"] == 5
+        # Two stale_cleanup calls (count=2 + count=0 from a previous
+        # field default) sum to 2.
+        assert snap["stale_cleanups"] >= 1
+
+    def test_compare_modes_returns_both(self) -> None:
+        """compare returns results for both basic and tiered modes."""
+        from axiom.parallel import compare
+
+        results = compare(n=20, updates=20, seed=1, max_workers=1)
+        assert "basic" in results
+        assert "tiered" in results

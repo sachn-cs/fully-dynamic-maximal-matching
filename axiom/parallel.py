@@ -2,7 +2,7 @@
 
 This module provides utilities for running multiple
 :class:`Matcher` instances in parallel, useful for
-benchmarking and comparing the basic and multilevel modes.
+benchmarking and comparing the basic and tiered modes.
 
 **Engineering utility** -- not part of the paper's baseline algorithm.
 
@@ -34,7 +34,7 @@ class Benchmark:
 
     Attributes:
         n: Number of vertices.
-        mode: Algorithm mode (``"basic"`` or ``"multilevel"``).
+        mode: Algorithm mode (``"basic"`` or ``"tiered"``).
         updates: Number of update operations replayed.
         elapsed_sec: Wall-clock time elapsed in seconds.
         updates_per_sec: ``updates / elapsed_sec`` (``inf`` when no
@@ -119,7 +119,7 @@ def run_parallel(
     Example:
         >>> configs = [
         ...     (100, "basic", 1000, 42),
-        ...     (100, "multilevel", 1000, 42),
+        ...     (100, "tiered", 1000, 42),
         ...     (200, "basic", 1000, 42),
         ... ]
         >>> results = run_parallel(configs)
@@ -140,7 +140,7 @@ def compare(
     seed: int = 42,
     max_workers: int | None = None,
 ) -> dict[str, Benchmark]:
-    """Compare basic and multilevel modes on the same graph size.
+    """Compare basic and tiered modes on the same graph size.
 
     Runs the same update sequence (seeded identically) against both
     modes and returns the per-mode results keyed by mode name.  This is
@@ -154,12 +154,12 @@ def compare(
         max_workers: Maximum parallel workers.
 
     Returns:
-        Dict mapping mode name (``"basic"`` / ``"multilevel"``) to
+        Dict mapping mode name (``"basic"`` / ``"tiered"``) to
         :class:`Benchmark`.
     """
     configs = [
         (n, "basic", updates, seed),
-        (n, "multilevel", updates, seed),
+        (n, "tiered", updates, seed),
     ]
     results = run_parallel(configs, max_workers)
-    return {r.mode: r for r in results}
+    return {"basic": results[0], "tiered": results[1]}
