@@ -18,8 +18,8 @@ Describe the tests you ran or added:
 
 ```bash
 pytest tests/ -v
-mypy src/fdmm/
-ruff check src/fdmm/ tests/ scripts/
+mypy axiom/
+ruff check axiom/ tests/ scripts/
 ```
 
 - [ ] All existing tests pass

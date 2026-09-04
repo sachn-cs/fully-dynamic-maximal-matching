@@ -32,9 +32,9 @@ Provide a concrete use case or example:
 
 ```python
 # Example of how the feature would be used
-from maxmatch import DynamicMaximalMatching
+from axiom import Matcher
 
-algo = DynamicMaximalMatching(n=100, mode="basic")
+algo = Matcher(n=100, mode="basic")
 # New feature usage...
 ```
 

@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug to help us improve FDMM
+about: Report a bug to help us improve Axiom
 title: "[Bug] "
 labels: bug
 assignees: ''
@@ -12,7 +12,7 @@ A clear and concise description of the bug.
 
 ## Steps to Reproduce
 
-1. Initialise with `DynamicMaximalMatching(n=..., mode=...)`
+1. Initialise with `Matcher(n=..., mode=...)`
 2. Perform operation '...'
 3. Call method '...'
 4. Observe error
@@ -28,9 +28,9 @@ What actually happened. Include any error messages or tracebacks.
 ## Minimal Reproducible Example
 
 ```python
-from maxmatch import DynamicMaximalMatching
+from axiom import Matcher
 
-algo = DynamicMaximalMatching(n=10, mode="basic")
+algo = Matcher(n=10, mode="basic")
 # Steps to reproduce...
 ```
 
@@ -38,7 +38,7 @@ algo = DynamicMaximalMatching(n=10, mode="basic")
 
 - **OS**: [e.g., macOS 14, Ubuntu 22.04]
 - **Python version**: [e.g., 3.12.1]
-- **FDMM version**: [e.g., 0.4.1]
+- **Axiom version**: [e.g., 0.5.0]
 - **Installation method**: [e.g., pip install -e ".[dev]"]
 
 ## Additional Context
@@ -49,5 +49,5 @@ Add any other context, screenshots, or logs about the problem here.
 
 - [ ] I have searched existing issues to ensure this is not a duplicate
 - [ ] I have included a minimal reproducible example
-- [ ] I have included the Python and FDMM versions
+- [ ] I have included the Python and Axiom versions
 - [ ] I have run the test suite (`pytest tests/ -v`) and confirmed the issue persists

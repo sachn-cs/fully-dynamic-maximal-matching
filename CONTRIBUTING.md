@@ -1,6 +1,6 @@
-# Contributing to FDMM
+# Contributing to Axiom
 
-Thank you for your interest in contributing to FDMM! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to Axiom! This document provides guidelines and information for contributors.
 
 ## Table of Contents
 
@@ -56,11 +56,11 @@ pytest tests/ -v
 | Command | Description |
 |---------|-------------|
 | `pytest tests/ -v` | Run the test suite |
-| `pytest --cov=fdmm tests/` | Run tests with coverage |
-| `mypy src/fdmm/` | Run type checking |
-| `ruff check src/fdmm/ tests/ scripts/` | Run linting |
+| `pytest --cov=axiom tests/` | Run tests with coverage |
+| `mypy src/axiom/` | Run type checking |
+| `ruff check src/axiom/ tests/ scripts/` | Run linting |
 | `ruff format src/ tests/ scripts/` | Auto-format code |
-| `fdmm --n 20 --mode basic` | Run the CLI demo |
+| `axiom --n 20 --mode basic` | Run the CLI demo |
 
 ## Branch Naming
 
@@ -131,8 +131,8 @@ chore: update pytest to 8.x
 
 4. **Run the full check suite** before submitting:
    ```bash
-   ruff check src/fdmm/ tests/ scripts/
-   mypy src/fdmm/
+   ruff check src/axiom/ tests/ scripts/
+   mypy src/axiom/
    pytest tests/ -v
    ```
 
@@ -213,13 +213,13 @@ pytest tests/ -v
 ### With Coverage
 
 ```bash
-pytest --cov=fdmm --cov-report=term-missing tests/
+pytest --cov=axiom --cov-report=term-missing tests/
 ```
 
 ### Specific Test Classes
 
 ```bash
-pytest tests/test_fdmm.py::TestDynamicMaximalMatching -v
+pytest tests/test_axiom.py::TestMatcher -v
 ```
 
 ### Property-Based Tests
