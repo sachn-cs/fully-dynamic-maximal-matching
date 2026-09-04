@@ -1,109 +1,70 @@
-# Frequently Asked Questions
+# FAQ
 
-## General
+## What is Axiom?
 
-### What is FDMM?
+Axiom is a pure-Python reproduction of *A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching* by Chuzhoy, Khanna, and Song (STOC 2026, arXiv:2605.00797v1). It maintains a maximal matching in an undirected graph under online edge insertions and deletions in &Otilde;(*n*<sup>1/2+o(1)</sup>) update time.
 
-FDMM is a Python implementation of the algorithm from "A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching" (Chuzhoy, Khanna, Song — STOC 2026, arXiv:2605.00797v1). It maintains a maximal matching in an undirected graph under online edge insertions and deletions.
-
-### What is a maximal matching?
-
-A maximal matching is a set of edges such that no edge can be added without sharing a vertex with an existing edge. It is a **maximal** (not maximum) matching — it cannot be extended, but it may not be the largest possible.
-
-### What is the difference between basic and multi-level mode?
-
-| Mode | Amortised Update Time | Complexity |
-|------|----------------------|------------|
-| Basic | Õ(n<sup>2/3</sup>) | Single-level z-system |
-| Multi-level | n<sup>1/2+o(1)</sup> | k-level recursive system (k = Θ(log n)) |
-
-Multi-level mode is asymptotically faster but has higher constant overhead. Use basic mode for small graphs or when simplicity is preferred.
-
-### Is this a faithful reproduction of the paper?
-
-Partially. Some components are exact, some are approximate, and some are unknown. See the [Fidelity Report](../README.md#fidelity-report) in the README and the detailed [Audit Report](audit_report.md).
-
-## Usage
-
-### When should I rebuild the z-system?
-
-The algorithm handles rebuilds automatically based on phase length. You do not need to trigger rebuilds manually.
-
-### How do I check if the matching is maximal?
-
-```python
-algo.is_maximal()  # Returns True if the matching is maximal
-```
-
-This performs a brute-force check and is O(n + m).
-
-### What do the statistics counters mean?
-
-See the [Interpreting Update Counters](../README.md#interpreting-update-counters) section in the README.
-
-### Can I use this with weighted graphs?
-
-No. FDMM maintains an unweighted maximal matching. The algorithm does not consider edge weights.
-
-### What about parallel/concurrent access?
-
-FDMM is not thread-safe. If you need concurrent access, use a lock or run separate instances.
-
-## Development
-
-### How do I run the tests?
+## How do I install it?
 
 ```bash
-pytest tests/ -v
-```
-
-### How do I check types?
-
-```bash
-mypy src/fdmm/
-```
-
-### How do I lint the code?
-
-```bash
-ruff check src/fdmm/ tests/ scripts/
-```
-
-### How do I format the code?
-
-```bash
-ruff format src/ tests/ scripts/
-```
-
-### How do I add a new invariant check?
-
-1. Add the check function to `src/fdmm/invariants.py`
-2. Add a call in `ZSubgraphSystem.check_all_invariants()` (in `z_system.py`)
-3. Add tests in `tests/test_fdmm.py`
-
-### How do I add a new command-line option?
-
-Edit `src/fdmm/cli.py` and add an argument to the `argparse` parser. Update `scripts/demo.py` if the option should also be available there.
-
-## Troubleshooting
-
-### Tests fail with import errors
-
-Ensure you've installed the package in editable mode:
-
-```bash
+git clone https://github.com/sachncs/fully-dynamic-maximal-matching.git
+cd fully-dynamic-maximal-matching
 pip install -e ".[dev]"
 ```
 
-### mypy reports errors
+## How do I use it?
 
-The project uses strict mypy. Ensure you're using Python 3.10+ and have the latest mypy:
+```python
+from axiom import Matcher
 
-```bash
-pip install --upgrade mypy
-mypy src/fdmm/
+algo = Matcher(n=100, mode="basic")
+algo.insert(0, 1)
+algo.delete(0, 1)
+assert algo.maximal()
 ```
 
-### Performance is slower than expected
+## What's the difference between `basic` and `tiered`?
 
-For small graphs (n < 100), constant factors dominate. The asymptotic bounds are only meaningful for large n. Use `python benchmarks/bench_fdmm.py` to measure throughput.
+- `basic` uses one *z*-subgraph system with *z* = *n*<sup>2/3</sup>; per-update cost is &Otilde;(*n*<sup>2/3</sup>).
+- `tiered` stacks *k* = log *n* systems at decreasing *z* values; per-update cost is *n*<sup>1/2+o(1)</sup>.
+
+Read [Modes](modes.md) for the full parameter table.
+
+## How do I run the benchmark?
+
+```bash
+python benchmarks/bench_axiom.py --n 200 --updates 5000 --mode basic
+```
+
+## How do I run the tests?
+
+```bash
+pytest tests/
+```
+
+## How do I contribute?
+
+Read [CONTRIBUTING.md](../CONTRIBUTING.md) for the workflow.
+
+## What are the limitations?
+
+1. **Empirical counters vs asymptotic guarantees.** The `Ledger` reports what actually happened in Python. The paper's amortised bounds assume a BST-based adjacency layer; the Python reproduction uses hash sets.
+2. **ABB+26 colouring.** The paper cites a deterministic (&Delta;+1)-colouring in *O*(*m*<sup>1+o(1)</sup>) time. The implementation substitutes Vizing's theorem plus a degree-ordered greedy colourer, both of which run in *O*(*m* &middot; &Delta;) worst case.
+3. **Multi-level derivation.** The paper derives a *z*<sub>*i*</sub>-system from a *z*<sub>*i*-1</sub>-system in *O*(*n*<sup>1+o(1)</sup>*z*<sub>1</sub>) time. The implementation rebuilds each level independently from the current graph.
+4. **Deferred open problems.** Documented in `docs/paper_restatement.md` (sections 14.3, 14.6, 14.7, 14.10, 14.11).
+
+## How do I cite Axiom?
+
+```
+Chuzhoy, J., Khanna, S., Song, J. (2026).
+A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching.
+arXiv:2605.00797v1.
+```
+
+## Who maintains Axiom?
+
+Sachin ([sachncs@gmail.com](mailto:sachncs@gmail.com)). Open an issue on GitHub for bugs or feature requests.
+
+## What's the licence?
+
+MIT. See [LICENSE](../LICENSE).

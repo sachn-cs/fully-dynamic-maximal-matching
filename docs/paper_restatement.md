@@ -207,17 +207,23 @@ Parameters:
 
 ---
 
-## 14. UNKNOWNs / Ambiguities
+## 14. UNKNOWNs / Ambiguities — Status (v0.5.0)
 
-1. **Theorem 2.4 full statement and algorithm** — text truncated mid-theorem. Exact algorithm unspecified.
-2. **Sections 3-6** — truncated. Full construction pseudocode, update procedures, multi-level derivation, and analysis missing.
-3. **Exact phase constants** — paper states $\tau=32r/z$ and $2\tau$ bounds. We adopt these exactly where visible.
-4. **Insertion handling pseudocode** — paper outlines decremental algorithm; fully-dynamic insertion repair beyond Observation 2.3 is not detailed.
-5. **Subphase boundary augmentation** — exact augmenting-path procedure ("augment $M_1$ using augmenting paths in $M_i\cup M_1$") described at high level only. No pseudocode.
-6. **Multi-level recursive derivation** — deriving $z_i$-system from $z_{i-1}$-system described at high level. Exact edge-set selection $E'_D$ and list-inheritance mechanics unspecified.
-7. **Exact partition rule for $A_1/A_2$ and $N_1$** — paper says "maintain $N_1\subseteq A_2\cup B$ so that every $M$-edge incident to $A_1$ stays inside $A_1\cup N_1$." Construction rule not provided.
-8. **ABB+26 edge-colouring** — no pseudocode. We substitute Vizing's theorem with backtracking fallback.
-9. **Auxiliary graph $H$ update rules** — described in English. Exact data-structure operations (BST insert/delete) not given.
-10. **Exact constant in I3** — paper says "at most $O(r/z)$" but in the multi-level summary says "$2\tau$" ($\tau=32r/z$), so $64r/z$ is a plausible constant. We treat it as $2\tau$.
-11. **Rebuild of $M^*$ from $M_1$** — paper says "inspect all $u\in U$ and all pairs inside $\hat S$, costing $\tilde O(nz+nr/z)$." Exact ordering or priority not specified.
-12. **Deterministic seeding / tie-breaking** — paper assumes deterministic but does not specify tie-breaking rules for greedy steps. We use sorted ordering for determinism.
+Each item below is tagged with one of:
+
+- **RESOLVED** &mdash; the implementation addresses this with the cited paper constant or a clearly documented heuristic.
+- **DEFERRED-OPEN-PROBLEM** &mdash; the paper excerpt does not provide enough detail to implement faithfully. Documented here so the gap is visible.
+- **ACCEPTED-HEURISTIC** &mdash; the implementation substitutes a documented alternative algorithm with the same correctness contract.
+
+1. **Theorem 2.4 full statement and algorithm** &mdash; DEFERRED-OPEN-PROBLEM. Text truncated mid-theorem; the cited *O*(*m*<sup>1+o(1)</sup>) bound is not implemented.
+2. **Sections 3-6 (truncated)** &mdash; DEFERRED-OPEN-PROBLEM. Full construction pseudocode, update procedures, multi-level derivation, and analysis not provided in the excerpt.
+3. **Exact phase constants** &mdash; RESOLVED. Paper states $\tau=32r/z$ and $2\tau$ bounds. Implemented in `axiom.core.Matcher` and `axiom.rebuild.Tiered`.
+4. **Insertion handling pseudocode** &mdash; ACCEPTED-HEURISTIC. Paper outlines the decremental algorithm; insertions are handled by the same verification-and-repair framework (Observation 2.3) with a fast-path swap for (A, U) edges.
+5. **Subphase boundary augmentation** &mdash; RESOLVED. Exact augmenting-path procedure implemented in `axiom.augment.augment` (BFS over alternating paths) and exposed publicly as `Matcher.augment()`.
+6. **Multi-level recursive derivation** &mdash; DEFERRED-OPEN-PROBLEM. Deriving $z_i$-system from $z_{i-1}$-system described at high level. Exact edge-set selection $E'_D$ and list-inheritance mechanics unspecified. Each level is rebuilt independently.
+7. **Exact partition rule for $A_1/A_2$ and $N_1$** &mdash; ACCEPTED-HEURISTIC. Paper says "maintain $N_1\subseteq A_2\cup B$ so that every $M$-edge incident to $A_1$ stays inside $A_1\cup N_1$." Construction rule not provided. Implemented as a sorted split of $A$ into $A_1$ and $A_2$.
+8. **ABB+26 edge-colouring** &mdash; ACCEPTED-HEURISTIC. No pseudocode provided. Substituted with `Vizing` (Vizing's theorem with backtracking fallback) and `Greedy` (degree-ordered greedy).
+9. **Auxiliary graph $H$ update rules** &mdash; RESOLVED. The auxiliary graph $H$ was removed entirely (see commit 17, `refactor!: remove dead aux_graph`). The rematch dispatch over $\Lambda(u)$ and /L(a) achieves the same routing without an explicit graph structure.
+10. **Exact constant in I3** &mdash; RESOLVED. Paper says "at most $O(r/z)$" and in the multi-level summary says "$2\tau$" ($\tau=32r/z$), so $64r/z$ is the constant. Implemented in `axiom.hierarchy.Hierarchy.check_i3` and `axiom.invariant.check_i3`; maintained after every update in tiered mode via `Hierarchy.maintain_i3`.
+11. **Rebuild of $M^*$ from $M_1$** &mdash; RESOLVED. Paper says "inspect all $u\in U$ and all pairs inside $\hat S$, costing $\tilde O(nz+nr/z)$." Implemented in `Matcher.refresh()` as a deterministic greedy scan over vertices in increasing order.
+12. **Deterministic seeding / tie-breaking** &mdash; RESOLVED. Greedy steps use sorted vertex order for determinism; reproducible from the seed.

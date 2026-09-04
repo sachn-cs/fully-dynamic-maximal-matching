@@ -1,216 +1,259 @@
-# Architecture Overview
+# Architecture
 
-This document describes the internal architecture of the FDMM implementation.
+This document describes the module boundaries of Axiom and the
+data flow through the algorithm.
 
-## High-Level Design
-
-```
-┌─────────────────────────────────────────────────┐
-│              DynamicMaximalMatching              │
-│          (main algorithm entry point)            │
-├─────────────────────────────────────────────────┤
-│                                                 │
-│  ┌─────────────┐  ┌──────────────────────┐     │
-│  │   Dynamic    │  │   ZSubgraphSystem    │     │
-│  │    Graph     │  │  (A, B, U, M, Λ, L) │     │
-│  └──────┬──────┘  └──────────┬───────────┘     │
-│         │                    │                   │
-│  ┌──────┴──────┐  ┌─────────┴──────────┐       │
-│  │  Matching   │  │  Edge Colouring     │       │
-│  │  (greedy)   │  │  (Vizing's theorem) │       │
-│  └─────────────┘  └────────────────────┘       │
-│                                                 │
-│  ┌─────────────┐  ┌────────────────────┐       │
-│  │  Updates    │  │    Accounting      │       │
-│  │ (insert/    │  │  (update counters) │       │
-│  │  delete)    │  │                    │       │
-│  └─────────────┘  └────────────────────┘       │
-│                                                 │
-└─────────────────────────────────────────────────┘
-```
-
-## Module Responsibilities
-
-### `graph.py` — Dynamic Graph
-
-The foundation layer. Maintains an undirected graph with O(1) edge queries and degree lookups using adjacency sets.
-
-- **Data structure**: `dict[int, set[int]]` adjacency representation
-- **Complexity**: O(1) amortised for add/remove/query (Python `set` instead of BST)
-
-### `matching.py` — Greedy Matching
-
-Provides the greedy maximal matching construction used during rebuilds.
-
-- `greedy_maximal_matching(graph, degree_cap)` — builds a maximal matching with optional degree cap
-- `partner_of(matching, vertex)` — O(1) lookup of a vertex's partner
-- `build_partner_map(matching)` — builds a full partner map from a matching set
-
-### `edge_coloring.py` — Edge Colouring
-
-Deterministic (Δ+1)-edge-colouring via two complementary strategies plus
-the alternating-path primitives that back them up.
-
-- `abb_edge_color(graph, delta)` — degree-sum-ordered greedy with short
-  recolour attempts (`recolour_for_edge`, `find_edge_of_color`).
-- `vizing_edge_color(graph, delta)` — classical Vizing with exponential
-  backtracking fallback.
-- `color_single_edge`, `alternating_path`, `flip_path` — building blocks
-  used by both strategies.
-- **Complexity**: O(m·Δ) worst case (paper requires O(m<sup>1+o(1)</sup>),
-  which is out of scope.
-
-### `z_system.py` — Z-Subgraph System
-
-The core combinatorial structure from the paper. A `ZSubgraphSystem` partitions vertices into:
-
-| Set | Description |
-|-----|-------------|
-| **A** | High-degree vertices (matched in M) |
-| **B** | Medium-degree vertices |
-| **U** | Low-degree / unmatched vertices |
-| **S** | A ∪ B (settled vertices) |
-| **M** | Degree-constrained edge subset |
-
-Additional data:
-- **Λ(u)** for u ∈ U: neighbours of u in B ∪ U
-- **L(a)** for a ∈ A: neighbours of a in U
-
-Public construction primitives exposed alongside the data classes:
-
-- `build_z_system(graph, z)` — two-step greedy + alternating-path
-  construction from Section 5.2 of the paper.
-- `build_multi_level_system(graph, level_zs)` — stacks `z`-systems at
-  decreasing `z` for the `n^{1/2+o(1)}` schedule.
-- `edge_switch_inside_B(...)` — performs the alternating-path
-  edge-switching inside `B` during Step 2 promotion.
-- `promote_u_vertex(...)` — tries to promote a `U`-vertex into `B` by
-  giving it `z` matching edges to `B`-neighbours, falling back to
-  `edge_switch_inside_B`.
-
-Invariants enforced:
-- **P1**: |N_G(u) ∩ B| ≤ 2z for all u ∈ U
-- **P2**: Each a ∈ A is matched only to vertices in S
-- **Degree bounds**: all vertices have degree ≤ z in M
-
-### `dynamic_matching.py` — Main Algorithm
-
-The `DynamicMaximalMatching` class orchestrates:
-
-1. **Initialisation**: builds the initial z-subgraph system
-2. **Phase management**: triggers rebuilds after every r updates
-3. **Insertion handling**: adds edge and repairs the matching
-4. **Deletion handling**: removes edge and rematches affected vertices
-5. **Rebuild**: reconstructs the z-system from scratch
-
-Public methods that drive subphase / augmentation logic directly are
-now part of the API surface:
-
-- `augment_m1_at_subphase_boundary()` — perform the `M_1` augmentation
-  step at the next subphase boundary.
-- `try_augment_m1(start, matched_in_m1)` — short BFS augmenting-path
-  search in `M_i ∪ M_1`.
-- `flip_augmenting_path(path)` — flip edges along an augmenting path.
-
-Two modes:
-- **Basic**: single-level z-system with z = ⌊n<sup>2/3</sup>⌋, r = ⌊n<sup>4/3</sup>⌋
-- **Multi-level**: k-level recursive system with k = Θ(log n)
-
-### `updates.py` — Update Handlers
-
-Implements the vertex-level repair procedures:
-
-- `rematch_u(algo, u)` — rematch an unmatched U-vertex by scanning Λ(u)
-- `rematch_b(algo, b)` — rematch a B-vertex via the auxiliary graph H
-- `rematch_a(algo, a)` — rematch an A-vertex by scanning L(a)
-- `handle_insertion(algo, u, v)` — process an edge insertion
-- `handle_deletion(algo, u, v)` — process an edge deletion
-
-### `invariants.py` — Invariant Checks
-
-Standalone verification functions:
-
-- `check_maximal_matching(graph, matching)` — brute-force maximality check
-- `check_z_system_invariants(system)` — verifies all z-system properties
-- `check_multi_level_i3(mls)` — multi-level invariant I3
-
-### `accounting.py` — Update Counters
-
-The `UpdateAccountant` class tracks empirical costs:
-
-- Insertion/deletion counts
-- Phase rebuild counts
-- Scan sizes for each vertex type (U, B, A)
-- Greedy rebuild and stale cleanup counts
-
-### `simulation.py` — Replay Utilities
-
-- `random_update_sequence(n, m, rng)` — generates random insert/delete sequences
-- `replay_updates(algo, updates)` — replays a sequence against an algorithm instance
-
-### `parallel.py` — Multiprocessing Benchmarks
-
-- `run_parallel_benchmarks(configs, max_workers=None)` — runs a list of
-  `((n, mode, updates, seed), ...)` jobs in a `multiprocessing.Pool`.
-- `compare_modes(n, updates, seed=42)` — convenience wrapper that runs
-  basic and multilevel on the same seed.
-- `run_benchmark_worker(n, mode, updates, seed)` — the per-process
-  worker previously prefixed with `_`; now re-exported for callers
-  who want to drive the same code path inside their own pool.
-
-### `visualise.py` — ASCII Visualisation
-
-- `visualise_system(system, width=60)` — render the z-subgraph system
-- `visualise_matching(algo, width=60)` — render the current matching state
-- `visualise_graph_adjacency(algo, width=60)` — render the adjacency list
-
-### `cli.py` — Command-Line Interface
-
-Entry point for `maxmatch` command. Runs a demo with random updates and prints statistics.
-
-## Data Flow
-
-### Insert Edge (u, v)
+## Module dependency graph
 
 ```
-insert_edge(u, v)
-  ├── graph.add_edge(u, v)
-  ├── if in M*: do nothing
-  ├── else:
-  │   ├── if u ∈ U: rematch_u(u)
-  │   ├── if v ∈ U: rematch_v(v)
-  │   ├── if both in B: try H-based rematch
-  │   └── fallback: rebuild
-  └── accountant.record_insertion()
+                ┌─────────────────────┐
+                │    axiom.cli        │  command-line entry point
+                └──────────┬──────────┘
+                           │
+                           ▼
+                ┌─────────────────────┐
+                │    axiom.core       │  Matcher (orchestrator)
+                └─┬──────┬──────┬─────┘
+                  │      │      │
+        ┌─────────┘      │      └─────────┐
+        ▼                ▼                ▼
+┌───────────────┐ ┌───────────────┐ ┌─────────────────┐
+│  axiom.graph  │ │  axiom.system │ │  axiom.rebuild   │
+│  Adjacency    │ │  System +     │ │  Basic + Tiered  │
+│               │ │  build/promote│ │                 │
+└───────────────┘ │  /switch      │ └────────┬────────┘
+                  └───────┬───────┘          │
+                          │                  │
+                          ▼                  ▼
+                  ┌───────────────┐  ┌─────────────────┐
+                  │ axiom.hierarchy│  │ axiom.repair     │
+                  │ Hierarchy +   │  │ local insert /   │
+                  │ check_i3 /    │  │ delete / rematch │
+                  │ maintain_i3   │  └─────────────────┘
+                  └───────┬───────┘
+                          │
+                          ▼
+                  ┌───────────────┐  ┌─────────────────┐
+                  │  axiom.color  │  │  axiom.matching  │
+                  │  Colorer +    │  │  greedy, partner │
+                  │  Greedy /     │  │  partners,       │
+                  │  Vizing       │  │  canonical       │
+                  └───────────────┘  └─────────────────┘
+
+                  ┌───────────────┐  ┌─────────────────┐
+                  │ axiom.augment │  │  axiom.ledger    │
+                  │ augment / flip│  │  Ledger          │
+                  └───────────────┘  └─────────────────┘
+
+                  ┌───────────────┐  ┌─────────────────┐
+                  │ axiom.invariant│ │ axiom.visualize   │
+                  │ invariant     │  │  ASCII renderer  │
+                  │ checkers      │  └─────────────────┘
+                  └───────────────┘
+
+                  ┌───────────────┐  ┌─────────────────┐
+                  │axiom.simulation│ │ axiom.parallel   │
+                  │ sequence,     │  │  Benchmark +     │
+                  │ replay        │  │  worker, compare │
+                  └───────────────┘  └─────────────────┘
+
+                          │
+                          ▼
+                  ┌───────────────┐
+                  │  axiom.types  │  shared vocabulary
+                  │  Vertex, Edge,│
+                  │  Matching,    │
+                  │  Graph Proto, │
+                  │  Colorer Proto│
+                  └───────────────┘
 ```
 
-### Delete Edge (u, v)
+## Algorithm data flow
+
+### `Matcher.__init__(n, mode, graph, colorer, policy)`
+
+1. Validate `n >= 0` and `mode in {"basic", "tiered", "multilevel"}`.
+2. Construct `self.graph = Adjacency(n)`, `self.colorer = Greedy()` (or
+   the provided colourer).
+3. Allocate `matched_edges`, `matched_vertices`, `partners` (empty).
+4. Resolve `self.policy`: explicit `policy=` wins, otherwise
+   `from_mode(mode)` returns `Basic()` or `Tiered()`.
+5. Call `policy.configure(self)` to set `z`, `phase_length`,
+   `subphase_length`, `k`, `level_zs`.
+6. Call `policy.rebuild(self)` to perform the initial rebuild:
+   - `Basic` builds a single `System`, partitions its `M` into colour
+     classes, picks `seed_matching = matchings[0]`, then calls
+     `Matcher.refresh()` to extend the seed to a maximal matching.
+   - `Tiered` builds `k` independent `System` levels, splits the
+     level-1 `A` into `A1/A2`, derives `N1 = A2 | B` and
+     `R1 = V \ (A1 | N1)`, sets `system` to the innermost level, then
+     calls `Matcher.refresh()`.
+
+### `Matcher.insert(u, v)`
 
 ```
-delete_edge(u, v)
-  ├── graph.remove_edge(u, v)
-  ├── if (u,v) ∈ M*: M*.remove(u,v)
-  ├── rematch affected vertices
-  └── accountant.record_deletion()
+graph.add_edge(u, v)
+    │
+    ▼
+__handle_insertion(u, v)
+    │ try the (A, U) fast path: if either endpoint is in A and the
+    │ other in U and the U-endpoint is currently matched and the
+    │ A-endpoint is unmatched, swap their matches.
+    │ otherwise
+    ▼
+refresh() [only if not maximal after fast path]
+    │
+    ▼
+__advance_update_counter()
+    │ increment update_count
+    │ check subphase boundary -> augment() (public)
+    │ check i3 -> maintain_i3() (public)
+    ▼
+if update_count >= phase_length:
+    policy.rebuild(self)
 ```
 
-### Phase Rebuild
+### `Matcher.delete(u, v)`
 
 ```
-rebuild()
-  ├── rebuild z-system from scratch
-  ├── rebuild M* from M_1
-  ├── rebuild auxiliary graph H
-  └── accountant.record_rebuild()
+if graph.has_edge(u, v):
+    graph.remove_edge(u, v)
+        │
+        ▼
+    __handle_deletion(u, v)
+        │ if (u, v) was in matched_edges: drop_match(u, v)
+        │ __cleanup_stale_edges()
+        │ __rematch_vertex(u), __rematch_vertex(v)
+        │ __cleanup_stale_edges()
+        │ if not maximal: refresh()
+        ▼
+    __advance_update_counter()
+else:
+    accountant.record_deletion() (no-op)
 ```
 
-## Known Approximations
+### `Matcher.refresh()`
 
-| Component | Paper | Implementation |
-|-----------|-------|----------------|
-| Adjacency structure | BSTs (O(log n)) | Python sets (O(1) amortised) |
-| Edge colouring | ABB+26 O(m<sup>1+o(1)</sup>) | Vizing O(mΔ) |
-| Multi-level rebuild | Recursive derivation | Independent level rebuilds |
-| Rematching scans | Bounded by O(r/z) | Unbounded scans |
-| M* maintenance | Incremental | Greedy reconstruction |
-| Subphases | Implemented | Not implemented |
+If `system is None`, run `greedy(graph)` and rebuild `partners` from
+the result.
+
+Otherwise, start from `seed_matching`, greedily extend to a maximal
+matching over `graph`, drop any duplicate-vertex edges from the seed
+first, and rebuild `partners` from the resulting `matched_edges`.
+
+### `policy.rebuild(matcher)`
+
+`Basic.rebuild`:
+
+```
+system = build(graph, z)
+partition()                # colour M into z+1 matchings
+refresh()                  # extend seed to maximal M*
+update_count = subphase_count = 0
+accountant.record_phase_rebuild()
+```
+
+`Tiered.rebuild`:
+
+```
+multi = Hierarchy(graph=graph, k=k)
+for z in level_zs:
+    multi.levels.append(build(graph, z))
+# split level-1 A into A1/A2, derive N1, R1
+system = multi.levels[-1]        # innermost level
+z = level_zs[-1]
+partition()
+refresh()
+update_count = subphase_count = 0
+accountant.record_phase_rebuild()
+```
+
+### `Matcher.augment()` (public, was `__augment_seed_at_subphase_boundary`)
+
+For every vertex in `system.S` that is currently unmatched in the seed
+matching, run `try_augment` (a BFS over alternating paths). Return the
+number of paths applied.
+
+### `Matcher.try_augment(start, matched)` (public)
+
+Delegate to `axiom.augment.augment(seed_matching, graph.neighbors, start, matched.__contains__)`.
+
+### `Matcher.flip(path)` (public)
+
+Delegate to `axiom.augment.flip(seed_matching, path)`.
+
+### `Hierarchy.check_i3(matching, r, z)` (public)
+
+Return True iff at most `2 * tau = 64 * r / z` edges of `matching`
+cross between `A1` and `R1`.
+
+### `Hierarchy.maintain_i3(matching, r, z, partner_of, rematch)`
+
+Break up to `2 * tau` offending `(A1, R1)` edges and call
+`rematch(endpoint)` on each endpoint. Used by `Matcher.maintain_i3()`
+which is called after every update in tiered mode.
+
+## State held by Matcher
+
+| Field | Type | Purpose |
+|---|---|---|
+| `n` | `int` | vertex count (fixed) |
+| `mode` | `str` | `"basic"` or `"tiered"` |
+| `graph` | `Adjacency` | underlying dynamic graph |
+| `colorer` | `Colorer` | used to colour `M` for partitioning |
+| `matched_edges` | `Matching` (`set[Edge]`) | the reported maximal matching |
+| `matched_vertices` | `set[Vertex]` | cache of matched vertices |
+| `partners` | `dict[Vertex, Vertex]` | O(1) partner map, kept in lockstep with `matched_edges` |
+| `z` | `int` | current degree parameter |
+| `phase_length` | `int` | updates between full rebuilds |
+| `subphase_length` | `int` | updates between seed augmentations |
+| `update_count` | `int` | updates since last rebuild |
+| `subphase_count` | `int` | subphase augmentations performed |
+| `system` | `System \| None` | active single-level system (or innermost level) |
+| `matchings` | `list[Matching]` | colour classes of the most recent colouring |
+| `seed_matching` | `Matching` | first colour class, kept as the seed |
+| `multi` | `Hierarchy \| None` | multi-level system, present in `"tiered"` mode |
+| `level_zs` | `list[int]` | per-level `z` values in decreasing order |
+| `k` | `int` | number of levels |
+| `accountant` | `Ledger` | bookkeeping counters |
+
+## Strategy pattern: Rebuild Policy
+
+The `Rebuild` Protocol has two implementations:
+
+```
+class Rebuild(Protocol):
+    name: str
+    def configure(matcher): ...     # set z, phase_length, etc.
+    def rebuild(matcher): ...        # full z-system rebuild
+```
+
+`Basic` is the single-level `&Otilde;(n^{2/3})` strategy; `Tiered`
+is the multi-level `n^{1/2+o(1)}` strategy. The Matcher holds one
+instance and delegates both configuration and rebuilding. This makes
+the algorithm pipeline traceable: every phase boundary hits
+`policy.rebuild(self)`, every construction step hits
+`policy.configure(self)`.
+
+## Single responsibility
+
+| Concern | Module |
+|---|---|
+| Graph storage | `axiom.graph` |
+| Single-level z-system | `axiom.system` |
+| Multi-level hierarchy | `axiom.hierarchy` |
+| Edge colouring | `axiom.color` |
+| Phase rebuild policy | `axiom.rebuild` |
+| Local repair | `axiom.repair` |
+| Augmenting-path search | `axiom.augment` |
+| Empirical counters | `axiom.ledger` |
+| Invariant validation | `axiom.invariant` |
+| Update sequences | `axiom.simulation` |
+| Parallel benchmarks | `axiom.parallel` |
+| ASCII visualisation | `axiom.visualize` |
+| Type vocabulary | `axiom.types` |
+| CLI entry point | `axiom.cli` |
+
+Pure logic is kept separate from I/O. The CLI module does no work
+besitself the orch argument and to print; the benchmark module is the
+only one that does parallel I/O.
