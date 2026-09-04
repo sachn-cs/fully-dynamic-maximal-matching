@@ -48,7 +48,7 @@ from axiom.types import (
     Vertex,
     canonical_edge,
 )
-from axiom.z_system import MultiLevelSystem, ZSubgraphSystem, build_z_system
+from axiom.system import MultiLevelSystem, System, build_z_system
 
 
 class Matcher:
@@ -130,7 +130,7 @@ class Matcher:
         self.subphase_length: int = 0
         self.update_count: int = 0
         self.subphase_count: int = 0
-        self.system: ZSubgraphSystem | None = None
+        self.system: System | None = None
         self.matchings: list[Matching] = []
         self.seed_matching: Matching = set()
 

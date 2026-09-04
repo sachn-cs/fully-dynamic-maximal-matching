@@ -11,7 +11,7 @@ Limitations:
     * All visualizations are designed for ``n <= ~100``; larger inputs
       produce very long reports.
     * The visualizations call the heavy invariant checks (e.g.
-      ``ZSubgraphSystem.check_all_invariants``) and therefore have
+      ``System.check_all_invariants``) and therefore have
       ``O(n + m)`` cost on top of any printing.
 """
 
@@ -21,10 +21,10 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from axiom.core import Matcher
-    from axiom.z_system import ZSubgraphSystem
+    from axiom.system import System
 
 
-def visualize_system(system: ZSubgraphSystem, width: int = 60) -> str:
+def visualize_system(system: System, width: int = 60) -> str:
     r"""Return an ASCII representation of the z-subgraph system.
 
     Shows the vertex partition ``(A, B, U)``, edges of ``M``, the

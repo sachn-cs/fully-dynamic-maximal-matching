@@ -52,7 +52,7 @@ from axiom.types import Edge, Graph, Matching, Vertex, canonical_edge
 
 
 @dataclass
-class ZSubgraphSystem:
+class System:
     r"""A single-level :math:`z`-subgraph system.
 
     Attributes:
@@ -77,7 +77,7 @@ class ZSubgraphSystem:
         :meth:`check_all_invariants` to verify the system stays legal.
 
     Thread-safety:
-        Not thread-safe.  A ``ZSubgraphSystem`` should be touched only
+        Not thread-safe.  A ``System`` should be touched only
         from the thread that owns the underlying ``Graph``.
     """
 
@@ -336,7 +336,7 @@ class MultiLevelSystem:
     Attributes:
         graph: The underlying dynamic graph.
         k: Number of levels.
-        levels: A list of :class:`ZSubgraphSystem` instances, one per level.
+        levels: A list of :class:`System` instances, one per level.
         A1: Partition of level-1 :math:`A` into :math:`A_1`.
         A2: Partition of level-1 :math:`A` into :math:`A_2`.
         N1: Subset :math:`N_1 \subseteq A_2 \cup B`.
@@ -348,7 +348,7 @@ class MultiLevelSystem:
 
     graph: Graph
     k: int
-    levels: list[ZSubgraphSystem] = field(default_factory=list)
+    levels: list[System] = field(default_factory=list)
     A1: set[Vertex] = field(default_factory=set)
     A2: set[Vertex] = field(default_factory=set)
     N1: set[Vertex] = field(default_factory=set)
@@ -511,7 +511,7 @@ def edge_switch_inside_B(
 
 def promote_u_vertex(
     graph: Graph,
-    system: ZSubgraphSystem,
+    system: System,
     M: set[Edge],
     deg_M: dict[Vertex, int],
     z: int,
@@ -594,7 +594,7 @@ def promote_u_vertex(
     return False
 
 
-def build_z_system(graph: Graph, z: int) -> ZSubgraphSystem:
+def build_z_system(graph: Graph, z: int) -> System:
     r"""Build a :math:`z`-subgraph system from scratch.
 
     Implements the two-step deterministic construction from Section 5.2
@@ -629,8 +629,8 @@ def build_z_system(graph: Graph, z: int) -> ZSubgraphSystem:
         z: The degree parameter (``z >= 1``).
 
     Returns:
-        A :class:`ZSubgraphSystem` satisfying every invariant checked
-        by :meth:`ZSubgraphSystem.check_all_invariants`.
+        A :class:`System` satisfying every invariant checked
+        by :meth:`System.check_all_invariants`.
 
     Complexity:
         :math:`O(n + m)` per promotion round; the number of rounds is
@@ -666,7 +666,7 @@ def build_z_system(graph: Graph, z: int) -> ZSubgraphSystem:
         else:
             A.add(v)
 
-    system = ZSubgraphSystem(graph=graph, z=z, A=A, B=B, U=U_set, M=M)
+    system = System(graph=graph, z=z, A=A, B=B, U=U_set, M=M)
     system.build_lambda_and_L()
 
     # --- Step 2: iteratively promote U-vertices to B.  We keep looping

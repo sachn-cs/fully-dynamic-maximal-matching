@@ -15,7 +15,7 @@ The supporting modules provide:
 
 * :class:`DynamicGraph` -- a thin adjacency-set wrapper that stands in
   for the paper's BST-based adjacency layer.
-* :class:`ZSubgraphSystem` and :class:`MultiLevelSystem` -- the
+* :class:`System` and :class:`MultiLevelSystem` -- the
   combinatorial state used by both modes.
 * The :math:`z`-system construction primitives
   :func:`build_z_system`, :func:`build_multi_level_system`,
@@ -59,9 +59,9 @@ from axiom.visualize import (
     visualize_matching,
     visualize_system,
 )
-from axiom.z_system import (
+from axiom.system import (
     MultiLevelSystem,
-    ZSubgraphSystem,
+    System,
     build_multi_level_system,
     build_z_system,
     edge_switch_inside_B,
@@ -75,7 +75,7 @@ __all__ = [
     "DynamicGraph",
     "GreedyColorer",
     "VizingColorer",
-    "ZSubgraphSystem",
+    "System",
     "MultiLevelSystem",
     "Edge",
     "Matching",

@@ -18,7 +18,7 @@ from axiom.core import Matcher
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
 from axiom.simulation import random_update_sequence, replay_updates
 from axiom.types import canonical_edge
-from axiom.z_system import MultiLevelSystem, ZSubgraphSystem, build_z_system
+from axiom.system import MultiLevelSystem, System, build_z_system
 
 # ------------------------------------------------------------------
 # Graph layer
@@ -326,8 +326,8 @@ class TestMatchingHelpers:
 # ------------------------------------------------------------------
 
 
-class TestZSubgraphSystem:
-    """Tests for :class:`axiom.z_system.ZSubgraphSystem`."""
+class TestSystem:
+    """Tests for :class:`axiom.system.System`."""
 
     def test_basic_properties(self) -> None:
         g = DynamicGraph(6)
@@ -337,7 +337,7 @@ class TestZSubgraphSystem:
         g.add_edge(3, 4)
         g.add_edge(4, 5)
 
-        system = ZSubgraphSystem(graph=g, z=2)
+        system = System(graph=g, z=2)
         system.A = {0, 1, 2}
         system.B = {3, 4}
         system.U = {5}
@@ -354,7 +354,7 @@ class TestZSubgraphSystem:
         g.add_edge(0, 1)
         g.add_edge(0, 2)
         g.add_edge(0, 3)
-        system = ZSubgraphSystem(graph=g, z=2)
+        system = System(graph=g, z=2)
         system.U = {0}
         system.B = {1, 2}
         system.A = {3}
@@ -367,24 +367,24 @@ class TestZSubgraphSystem:
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         g.add_edge(2, 3)
-        system = ZSubgraphSystem(graph=g, z=2)
+        system = System(graph=g, z=2)
         assert system.is_maximal_matching({(0, 1), (2, 3)})
         assert not system.is_maximal_matching({(0, 1)})
 
     def test_empty_graph_maximal(self) -> None:
         g = DynamicGraph(3)
-        system = ZSubgraphSystem(graph=g, z=1)
+        system = System(graph=g, z=1)
         assert system.is_maximal_matching(set())
 
     def test_single_edge_maximal(self) -> None:
         g = DynamicGraph(2)
         g.add_edge(0, 1)
-        system = ZSubgraphSystem(graph=g, z=1)
+        system = System(graph=g, z=1)
         assert system.is_maximal_matching({(0, 1)})
 
     def test_check_degree_bounds_empty(self) -> None:
         g = DynamicGraph(3)
-        system = ZSubgraphSystem(graph=g, z=1)
+        system = System(graph=g, z=1)
         system.A = set()
         system.B = set()
         system.U = {0, 1, 2}
@@ -394,7 +394,7 @@ class TestZSubgraphSystem:
         g = DynamicGraph(4)
         for i in range(3):
             g.add_edge(3, i)
-        system = ZSubgraphSystem(graph=g, z=1)
+        system = System(graph=g, z=1)
         system.U = {3}
         system.B = {0, 1, 2}
         system.A = set()
@@ -403,7 +403,7 @@ class TestZSubgraphSystem:
     def test_P2_violation(self) -> None:
         g = DynamicGraph(3)
         g.add_edge(0, 2)
-        system = ZSubgraphSystem(graph=g, z=1)
+        system = System(graph=g, z=1)
         system.A = {0}
         system.B = set()
         system.U = {1, 2}
@@ -412,13 +412,13 @@ class TestZSubgraphSystem:
 
     def test_all_invariants_on_empty(self) -> None:
         g = DynamicGraph(0)
-        system = ZSubgraphSystem(graph=g, z=0)
+        system = System(graph=g, z=0)
         assert system.check_all_invariants()
 
     def test_degree_in_M_on_unmatched_vertex(self) -> None:
         g = DynamicGraph(4)
         g.add_edge(0, 1)
-        system = ZSubgraphSystem(graph=g, z=1)
+        system = System(graph=g, z=1)
         system.M = {(0, 1)}
         assert system.degree_in_M(2) == 0
 
@@ -426,7 +426,7 @@ class TestZSubgraphSystem:
         g = DynamicGraph(4)
         g.add_edge(0, 1)
         g.add_edge(0, 2)
-        system = ZSubgraphSystem(graph=g, z=2)
+        system = System(graph=g, z=2)
         system.M = {(0, 1), (0, 2)}
         assert set(system.neighbors_in_M(0)) == {1, 2}
         assert set(system.neighbors_in_M(1)) == {0}
@@ -438,7 +438,7 @@ class TestZSubgraphSystem:
 
 
 class TestBuildZSystem:
-    """Tests for :func:`axiom.z_system.build_z_system`."""
+    """Tests for :func:`axiom.system.build_z_system`."""
 
     def test_build_on_empty_graph(self) -> None:
         g = DynamicGraph(4)
@@ -828,7 +828,7 @@ class TestMatcher:
 
 
 class TestMultiLevelSystem:
-    """Tests for :class:`axiom.z_system.MultiLevelSystem`."""
+    """Tests for :class:`axiom.system.MultiLevelSystem`."""
 
     def test_empty(self) -> None:
         g = DynamicGraph(4)
@@ -842,8 +842,8 @@ class TestMultiLevelSystem:
         g.add_edge(1, 2)
         mls = MultiLevelSystem(graph=g, k=2)
         mls.levels = [
-            ZSubgraphSystem(graph=g, z=2, A={0}, B={1}, U={2, 3}),
-            ZSubgraphSystem(graph=g, z=1, A={0}, B={1}, U={2, 3}),
+            System(graph=g, z=2, A={0}, B={1}, U={2, 3}),
+            System(graph=g, z=1, A={0}, B={1}, U={2, 3}),
         ]
         assert len(mls.levels) == 2
 

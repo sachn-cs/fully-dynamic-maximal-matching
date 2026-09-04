@@ -9,7 +9,7 @@ Mathematical background:
     The :math:`z`-subgraph system carries six invariants whose conjunction
     guarantees the :math:`\tilde O(n^{2/3})` per-update cost of the
     basic algorithm (Section 2 of the paper).  They are validated
-    individually by the methods of :class:`ZSubgraphSystem` and bundled
+    individually by the methods of :class:`System` and bundled
     here so that external code (tests, benchmarks) can call a single
     entry point.
 
@@ -22,13 +22,13 @@ Mathematical background:
 from __future__ import annotations
 
 from axiom.types import Graph, Matching, Vertex
-from axiom.z_system import MultiLevelSystem, ZSubgraphSystem
+from axiom.system import MultiLevelSystem, System
 
 
-def check_z_system_invariants(system: ZSubgraphSystem) -> bool:
+def check_z_system_invariants(system: System) -> bool:
     """Return ``True`` iff every invariant of ``system`` holds.
 
-    Thin wrapper around :meth:`ZSubgraphSystem.check_all_invariants`;
+    Thin wrapper around :meth:`System.check_all_invariants`;
     surfaced as a module-level function so callers do not need to import
     the ``z_system`` module directly.
 
