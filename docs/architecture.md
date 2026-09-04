@@ -166,7 +166,7 @@ The `UpdateAccountant` class tracks empirical costs:
 
 ### `cli.py` — Command-Line Interface
 
-Entry point for `fdmm` command. Runs a demo with random updates and prints statistics.
+Entry point for `maxmatch` command. Runs a demo with random updates and prints statistics.
 
 ## Data Flow
 
