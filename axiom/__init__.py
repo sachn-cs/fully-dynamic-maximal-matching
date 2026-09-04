@@ -20,8 +20,8 @@ The supporting modules provide:
 * The :math:`z`-system construction primitives
   :func:`build_z_system`, :func:`build_hierarchy`,
   :func:`edge_switch_inside_B`, and :func:`promote_u_vertex`.
-* The edge colouring utilities :class:`GreedyColorer`,
-  :class:`VizingColorer`, :func:`recolor_for_edge`,
+* The edge colouring utilities :class:`Greedy`,
+  :class:`Vizing`, :func:`recolor_for_edge`,
   :func:`find_edge_of_color`, :func:`color_single_edge`,
   :func:`alternating_path`, and :func:`flip_path`.
 * :func:`check_maximal_matching` and :func:`check_z_system_invariants`
@@ -36,9 +36,9 @@ Reference:
 """
 
 from axiom.accounting import UpdateAccountant
-from axiom.coloring import (
-    GreedyColorer,
-    VizingColorer,
+from axiom.color import (
+    Greedy,
+    Vizing,
     alternating_path,
     backtrack_color,
     color_single_edge,
@@ -53,7 +53,7 @@ from axiom.core import Matcher
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
 from axiom.parallel import compare_modes, run_parallel_benchmarks
 from axiom.simulation import random_update_sequence, replay_updates
-from axiom.types import Edge, EdgeColorer, Graph, Matching, Vertex, canonical_edge
+from axiom.types import Edge, Colorer, Graph, Matching, Vertex, canonical_edge
 from axiom.visualize import (
     visualize_graph_adjacency,
     visualize_matching,
@@ -72,15 +72,15 @@ __version__ = "0.5.0"
 __all__ = [
     "Matcher",
     "DynamicGraph",
-    "GreedyColorer",
-    "VizingColorer",
+    "Greedy",
+    "Vizing",
     "System",
     "Hierarchy",
     "Edge",
     "Matching",
     "Vertex",
     "Graph",
-    "EdgeColorer",
+    "Colorer",
     "canonical_edge",
     "greedy_maximal_matching",
     "partner_of",

@@ -145,13 +145,13 @@ class Graph(Protocol):
 
 
 @runtime_checkable
-class EdgeColorer(Protocol):
+class Colorer(Protocol):
     """Protocol defining the interface for edge coloring algorithms.
 
     Any edge coloring implementation must produce a proper coloring using
     at most delta + 1 colors.  Two implementations are provided:
-    :class:`axiom.coloring.GreedyColorer` and
-    :class:`axiom.coloring.VizingColorer`.
+    :class:`axiom.color.Greedy` and
+    :class:`axiom.color.Vizing`.
     """
 
     def color(self, graph: Graph, delta: int) -> Coloring:

@@ -37,12 +37,12 @@ import math
 from collections import deque
 
 from axiom.accounting import UpdateAccountant
-from axiom.coloring import GreedyColorer
+from axiom.color import Greedy
 from axiom.graph import DynamicGraph
 from axiom.invariants import check_maximal_matching
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
 from axiom.types import (
-    EdgeColorer,
+    Colorer,
     Graph,
     Matching,
     Vertex,
@@ -93,7 +93,7 @@ class Matcher:
         n: Number of vertices (fixed for the lifetime of the instance).
         mode: Either ``"basic"`` or ``"multilevel"``.
         graph: Optional graph implementation (defaults to ``DynamicGraph``).
-        colorer: Optional edge colorer (defaults to ``GreedyColorer``).
+        colorer: Optional edge colorer (defaults to ``Greedy``).
 
     Raises:
         ValueError: If ``n`` is negative or ``mode`` is unknown.
@@ -113,7 +113,7 @@ class Matcher:
         n: int,
         mode: str = "basic",
         graph: Graph | None = None,
-        colorer: EdgeColorer | None = None,
+        colorer: Colorer | None = None,
     ) -> None:
         if n < 0:
             raise ValueError(f"n must be non-negative, got {n}")
@@ -122,7 +122,7 @@ class Matcher:
         self.n = n
         self.mode = mode
         self.graph = graph if graph is not None else DynamicGraph(n)
-        self.colorer = colorer if colorer is not None else GreedyColorer()
+        self.colorer = colorer if colorer is not None else Greedy()
         self.matched_edges: Matching = set()
         self.matched_vertices: set[Vertex] = set()
 

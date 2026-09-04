@@ -5,12 +5,12 @@ r"""Deterministic edge-coloring routines.
 ABB+26 algorithm is not provided in the paper excerpt.  This module provides
 two implementations:
 
-1. ``GreedyColorer`` -- a fast greedy colouring with conflict resolution
+1. ``Greedy`` -- a fast greedy colouring with conflict resolution
    that runs in :math:`O(m \cdot \Delta)` worst case but is significantly
    faster in practice than the classical Vizing alternating-path approach.
    Uses degree-ordered processing and colour-class maintenance for efficiency.
 
-2. ``VizingColorer`` -- the original Vizing alternating-path recolouring
+2. ``Vizing`` -- the original Vizing alternating-path recolouring
    with backtracking fallback.  Correct and uses at most :math:`\Delta+1`
    colours but slower.
 
@@ -31,8 +31,8 @@ Mathematical background:
 
 Limitations:
     * The :math:`O(m^{1+o(1)})` bound of Theorem 2.4 is **not** met here.
-      ``GreedyColorer`` is :math:`O(m \cdot \Delta)` worst case and
-      ``VizingColorer`` is :math:`O(m \cdot \Delta)` plus an
+      ``Greedy`` is :math:`O(m \cdot \Delta)` worst case and
+      ``Vizing`` is :math:`O(m \cdot \Delta)` plus an
       exponential backtracking fallback for stubborn instances.
 """
 
@@ -53,7 +53,7 @@ class VizingColoringError(RuntimeError):
     """
 
 
-class GreedyColorer:
+class Greedy:
     """Fast greedy edge-coloring using degree-ordered processing.
 
     This approximates the ABB+26 approach by processing edges in a
@@ -149,7 +149,7 @@ class GreedyColorer:
         return coloring
 
 
-class VizingColorer:
+class Vizing:
     """Vizing alternating-path edge-coloring with backtracking fallback.
 
     The primary algorithm processes edges one by one using the standard

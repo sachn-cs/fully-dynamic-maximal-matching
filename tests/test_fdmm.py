@@ -11,7 +11,7 @@ import random
 
 import pytest
 
-from axiom.coloring import VizingColorer
+from axiom.color import Vizing
 from axiom.graph import DynamicGraph
 from axiom.invariants import check_maximal_matching
 from axiom.core import Matcher
@@ -177,7 +177,7 @@ class TestDynamicGraph:
 
 
 class TestEdgeColoring:
-    """Tests for :mod:`axiom.coloring`."""
+    """Tests for :mod:`axiom.color`."""
 
     def _is_proper(self, graph: DynamicGraph, coloring: dict) -> bool:
         for u in range(graph.n):
@@ -195,7 +195,7 @@ class TestEdgeColoring:
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         g.add_edge(2, 0)
-        coloring = VizingColorer().color(g, 2)
+        coloring = Vizing().color(g, 2)
         assert len(set(coloring.values())) <= 3
         assert self._is_proper(g, coloring)
 
@@ -203,7 +203,7 @@ class TestEdgeColoring:
         g = DynamicGraph(5)
         for i in range(1, 5):
             g.add_edge(0, i)
-        coloring = VizingColorer().color(g, 4)
+        coloring = Vizing().color(g, 4)
         assert len(set(coloring.values())) <= 5
         assert self._is_proper(g, coloring)
 
@@ -212,20 +212,20 @@ class TestEdgeColoring:
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         g.add_edge(2, 3)
-        coloring = VizingColorer().color(g, 2)
+        coloring = Vizing().color(g, 2)
         assert len(set(coloring.values())) <= 3
         assert self._is_proper(g, coloring)
 
     def test_empty_graph(self) -> None:
         g = DynamicGraph(3)
-        coloring = VizingColorer().color(g, 0)
+        coloring = Vizing().color(g, 0)
         assert coloring == {}
 
     def test_cycle(self) -> None:
         g = DynamicGraph(5)
         for i in range(5):
             g.add_edge(i, (i + 1) % 5)
-        coloring = VizingColorer().color(g, 2)
+        coloring = Vizing().color(g, 2)
         assert len(set(coloring.values())) <= 3
         assert self._is_proper(g, coloring)
 
@@ -235,7 +235,7 @@ class TestEdgeColoring:
         for i in range(n):
             for j in range(i + 1, n):
                 g.add_edge(i, j)
-        coloring = VizingColorer().color(g, n - 1)
+        coloring = Vizing().color(g, n - 1)
         assert len(set(coloring.values())) <= n
         assert self._is_proper(g, coloring)
 
@@ -245,7 +245,7 @@ class TestEdgeColoring:
         for i in range(n):
             for j in range(i + 1, n):
                 g.add_edge(i, j)
-        coloring = VizingColorer().color(g, n - 1)
+        coloring = Vizing().color(g, n - 1)
         assert len(set(coloring.values())) <= n
         assert self._is_proper(g, coloring)
 
@@ -257,14 +257,14 @@ class TestEdgeColoring:
         g.add_edge(3, 4)
         g.add_edge(4, 5)
         g.add_edge(5, 3)
-        coloring = VizingColorer().color(g, 2)
+        coloring = Vizing().color(g, 2)
         assert len(set(coloring.values())) <= 3
         assert self._is_proper(g, coloring)
 
     def test_single_edge(self) -> None:
         g = DynamicGraph(2)
         g.add_edge(0, 1)
-        coloring = VizingColorer().color(g, 1)
+        coloring = Vizing().color(g, 1)
         assert len(set(coloring.values())) == 1
         assert self._is_proper(g, coloring)
 
@@ -274,7 +274,7 @@ class TestEdgeColoring:
         g.add_edge(1, 2)
         g.add_edge(3, 4)
         g.add_edge(4, 5)
-        coloring = VizingColorer().color(g, 2)
+        coloring = Vizing().color(g, 2)
         assert len(set(coloring.values())) <= 3
         assert self._is_proper(g, coloring)
 
@@ -283,7 +283,7 @@ class TestEdgeColoring:
         g.add_edge(0, 1)
         g.add_edge(0, 2)
         g.add_edge(1, 2)
-        coloring = VizingColorer().color(g, 2)
+        coloring = Vizing().color(g, 2)
         assert len(coloring) == g.num_edges()
         for e in g.edges():
             assert e in coloring
