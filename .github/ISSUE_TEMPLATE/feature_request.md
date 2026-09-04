@@ -32,7 +32,7 @@ Provide a concrete use case or example:
 
 ```python
 # Example of how the feature would be used
-from fdmm import DynamicMaximalMatching
+from maxmatch import DynamicMaximalMatching
 
 algo = DynamicMaximalMatching(n=100, mode="basic")
 # New feature usage...
