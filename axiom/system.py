@@ -48,7 +48,7 @@ from collections import deque
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
-from axiom.types import Edge, Graph, Matching, Vertex, canonical_edge
+from axiom.types import Edge, Graph, Matching, Vertex, canonical
 
 
 @dataclass
@@ -114,7 +114,7 @@ class System:
         """
         deg = 0
         for w in self.graph.neighbors(v):
-            e = canonical_edge(v, w)
+            e = canonical(v, w)
             if e in self.M:
                 deg += 1
         return deg
@@ -132,7 +132,7 @@ class System:
             Amortised :math:`O(\deg_M(v))` per complete iteration.
         """
         for w in self.graph.neighbors(v):
-            if canonical_edge(v, w) in self.M:
+            if canonical(v, w) in self.M:
                 yield w
 
     def check_bound(self) -> bool:
@@ -394,7 +394,7 @@ def edge_switch_inside_B(
                 # Arrived via a non-M edge; the next alternating step
                 # must follow an M edge from ``curr`` to a B vertex.
                 for w in graph.neighbors(curr):
-                    e = canonical_edge(curr, w)
+                    e = canonical(curr, w)
                     if e in M and w in graph.adj[curr]:
                         if (w, 1) not in parent:
                             parent[(w, 1)] = (curr, 0)
@@ -414,7 +414,7 @@ def edge_switch_inside_B(
                         # Defensive: avoid stepping back onto ``u`` even
                         # though ``u`` is in U, not B.
                         continue
-                    e = canonical_edge(curr, w)
+                    e = canonical(curr, w)
                     if e not in M and w in graph.neighbors(curr):
                         if (w, 0) not in parent:
                             parent[(w, 0)] = (curr, 1)
@@ -442,7 +442,7 @@ def edge_switch_inside_B(
         # Step 1: add the missing edge (u, b_start) to M.  ``b_start``
         # was saturated before this; the subsequent flips will recover
         # one slot by re-routing that capacity.
-        e_ub = canonical_edge(u, b_start)
+        e_ub = canonical(u, b_start)
         M.add(e_ub)
         deg_M[u] += 1
         deg_M[b_start] += 1
@@ -451,7 +451,7 @@ def edge_switch_inside_B(
         # parity-0 were not in M and must enter M; edges tagged parity-1
         # were in M and must leave M.
         for i in range(len(vertices) - 1):
-            e = canonical_edge(vertices[i], vertices[i + 1])
+            e = canonical(vertices[i], vertices[i + 1])
             _, p = path[i]
             if p == 0:
                 M.add(e)
@@ -513,7 +513,7 @@ def promote_u_vertex(
         if added >= z:
             break
         if deg_M[w] < z:
-            e = canonical_edge(u, w)
+            e = canonical(u, w)
             if e not in M:
                 M.add(e)
                 deg_M[u] += 1
@@ -542,7 +542,7 @@ def promote_u_vertex(
             if w in system.B:
                 has_M_to_U = False
                 for x in graph.neighbors(w):
-                    if canonical_edge(w, x) in M and x in system.U:
+                    if canonical(w, x) in M and x in system.U:
                         has_M_to_U = True
                         break
                 if not has_M_to_U:
@@ -602,7 +602,7 @@ def build_z_system(graph: Graph, z: int) -> System:
     edges = sorted(graph.edges())
     for u, v in edges:
         if deg_M[u] < z and deg_M[v] < z:
-            e = canonical_edge(u, v)
+            e = canonical(u, v)
             M.add(e)
             deg_M[u] += 1
             deg_M[v] += 1
@@ -616,7 +616,7 @@ def build_z_system(graph: Graph, z: int) -> System:
     for v in S:
         has_neighbor_in_U = False
         for w in graph.neighbors(v):
-            if canonical_edge(v, w) in M and w not in S:
+            if canonical(v, w) in M and w not in S:
                 has_neighbor_in_U = True
                 break
         if has_neighbor_in_U:

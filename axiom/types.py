@@ -51,7 +51,7 @@ Coloring: TypeAlias = dict[Edge, Color]
 """A proper edge coloring maps each edge to a color."""
 
 
-def canonical_edge(u: Vertex, v: Vertex) -> Edge:
+def canonical(u: Vertex, v: Vertex) -> Edge:
     """Return the canonical (unordered) representation of an edge.
 
     Args:
@@ -62,9 +62,9 @@ def canonical_edge(u: Vertex, v: Vertex) -> Edge:
         A tuple ``(min, max)`` so that ``u < v``.
 
     Examples:
-        >>> canonical_edge(3, 1)
+        >>> canonical(3, 1)
         (1, 3)
-        >>> canonical_edge(2, 5) == canonical_edge(5, 2)
+        >>> canonical(2, 5) == canonical(5, 2)
         True
     """
     if u < v:

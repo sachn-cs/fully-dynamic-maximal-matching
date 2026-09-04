@@ -50,10 +50,10 @@ from axiom.color import (
 from axiom.graph import Adjacency
 from axiom.invariant import check_maximal_matching, valid
 from axiom.core import Matcher
-from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
+from axiom.matching import partners, greedy, partner_in
 from axiom.parallel import compare_modes, run_parallel_benchmarks
 from axiom.simulation import random_update_sequence, replay_updates
-from axiom.types import Edge, Colorer, Graph, Matching, Vertex, canonical_edge
+from axiom.types import Edge, Colorer, Graph, Matching, Vertex, canonical
 from axiom.visualize import (
     visualize_graph_adjacency,
     visualize_matching,
@@ -81,10 +81,10 @@ __all__ = [
     "Vertex",
     "Graph",
     "Colorer",
-    "canonical_edge",
-    "greedy_maximal_matching",
-    "partner_of",
-    "build_partner_map",
+    "canonical",
+    "greedy",
+    "partner_in",
+    "partners",
     "check_maximal_matching",
     "valid",
     "Ledger",

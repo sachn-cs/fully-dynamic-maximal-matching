@@ -38,7 +38,7 @@ Limitations:
 
 from __future__ import annotations
 
-from axiom.types import Color, Coloring, Edge, Graph, Vertex, canonical_edge
+from axiom.types import Color, Coloring, Edge, Graph, Vertex, canonical
 
 
 class VizingColoringError(RuntimeError):
@@ -101,7 +101,7 @@ class Greedy:
         )
 
         for u, v in edges:
-            e = canonical_edge(u, v)
+            e = canonical(u, v)
             used_u = vertex_colors[u]
             used_v = vertex_colors[v]
 
@@ -253,7 +253,7 @@ def recolor_for_edge(
                     vertex_colors[w].discard(c1)
                     vertex_colors[w].add(c2)
 
-                    e_uv = canonical_edge(u, v)
+                    e_uv = canonical(u, v)
                     coloring[e_uv] = c1
                     used_u.add(c1)
                     used_v.add(c1)
@@ -271,7 +271,7 @@ def find_edge_of_color(
         The unique matching edge or ``None`` if none exists.
     """
     for w in graph.neighbors(v):
-        e = canonical_edge(v, w)
+        e = canonical(v, w)
         if e in coloring and coloring[e] == c:
             return e
     return None
@@ -306,11 +306,11 @@ def backtrack_color(
     u, v = edges[idx]
     used: set[Color] = set()
     for w in graph.neighbors(u):
-        e = canonical_edge(u, w)
+        e = canonical(u, w)
         if e in coloring:
             used.add(coloring[e])
     for w in graph.neighbors(v):
-        e = canonical_edge(v, w)
+        e = canonical(v, w)
         if e in coloring:
             used.add(coloring[e])
     for c in range(max_colors):
@@ -345,7 +345,7 @@ def missing_colors(
     """
     used: set[Color] = set()
     for w in graph.neighbors(vertex):
-        e = canonical_edge(vertex, w)
+        e = canonical(vertex, w)
         if e in coloring:
             used.add(coloring[e])
     return [c for c in range(max_colors) if c not in used]
@@ -385,7 +385,7 @@ def alternating_path(
     while True:
         found = False
         for w in graph.neighbors(current):
-            e = canonical_edge(current, w)
+            e = canonical(current, w)
             if e in coloring and coloring[e] == next_color and w not in visited:
                 path.append(w)
                 visited.add(w)
@@ -418,7 +418,7 @@ def flip_path(
         color2: Second colour in the swap.
     """
     for i in range(len(path) - 1):
-        e = canonical_edge(path[i], path[i + 1])
+        e = canonical(path[i], path[i + 1])
         if coloring[e] == color1:
             coloring[e] = color2
         else:
@@ -470,7 +470,7 @@ def color_single_edge(
 
     common = set(miss_u) & set(miss_v)
     if common:
-        coloring[canonical_edge(u, v)] = min(common)
+        coloring[canonical(u, v)] = min(common)
         return
 
     c = miss_u[0]
@@ -480,7 +480,7 @@ def color_single_edge(
 
     if v not in path:
         flip_path(coloring, path, c, d)
-        coloring[canonical_edge(u, v)] = d
+        coloring[canonical(u, v)] = d
         return
 
     if len(miss_u) < 2:
@@ -499,4 +499,4 @@ def color_single_edge(
         )
 
     flip_path(coloring, path2, c_prime, d)
-    coloring[canonical_edge(u, v)] = d
+    coloring[canonical(u, v)] = d

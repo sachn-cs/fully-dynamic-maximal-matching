@@ -21,10 +21,10 @@ Assumptions:
 
 from __future__ import annotations
 
-from axiom.types import Graph, Matching, Vertex, canonical_edge
+from axiom.types import Graph, Matching, Vertex, canonical
 
 
-def greedy_maximal_matching(graph: Graph) -> Matching:
+def greedy(graph: Graph) -> Matching:
     """Return a maximal matching computed by a deterministic greedy scan.
 
     Vertices are processed in increasing order and the first available
@@ -51,7 +51,7 @@ def greedy_maximal_matching(graph: Graph) -> Matching:
             continue
         for v in graph.neighbors(u):
             if v not in matched:
-                matching.add(canonical_edge(u, v))
+                matching.add(canonical(u, v))
                 matched.add(u)
                 matched.add(v)
                 break
@@ -92,7 +92,7 @@ def is_maximal_matching(graph: Graph, matching: Matching) -> bool:
     return True
 
 
-def partner_of(matching: Matching, v: Vertex) -> Vertex | None:
+def partner_in(matching: Matching, v: Vertex) -> Vertex | None:
     """Return the vertex matched to ``v`` in ``matching``, or ``None``.
 
     Args:
@@ -103,7 +103,7 @@ def partner_of(matching: Matching, v: Vertex) -> Vertex | None:
         The matched vertex or ``None`` if ``v`` is unmatched.
 
     Complexity:
-        :math:`O(|M|)` linear scan.  Use :func:`build_partner_map` if the
+        :math:`O(|M|)` linear scan.  Use :func:`partners` if the
         caller needs repeated partner lookups on the same matching.
     """
     for x, y in matching:
@@ -114,7 +114,7 @@ def partner_of(matching: Matching, v: Vertex) -> Vertex | None:
     return None
 
 
-def build_partner_map(matching: Matching) -> dict[Vertex, Vertex]:
+def partners(matching: Matching) -> dict[Vertex, Vertex]:
     """Return a dict mapping each matched vertex to its partner.
 
     The map is built by merging the two orientation dictionaries

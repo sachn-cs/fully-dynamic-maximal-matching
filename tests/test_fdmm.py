@@ -15,9 +15,9 @@ from axiom.color import Vizing
 from axiom.graph import Adjacency
 from axiom.invariant import check_maximal_matching
 from axiom.core import Matcher
-from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
+from axiom.matching import partners, greedy, partner_in
 from axiom.simulation import random_update_sequence, replay_updates
-from axiom.types import canonical_edge
+from axiom.types import canonical
 from axiom.hierarchy import Hierarchy
 from axiom.system import System, build_z_system
 
@@ -183,7 +183,7 @@ class TestEdgeColoring:
         for u in range(graph.n):
             seen: set[int] = set()
             for v in graph.neighbors(u):
-                e = canonical_edge(u, v)
+                e = canonical(u, v)
                 c = coloring[e]
                 if c in seen:
                     return False
@@ -297,28 +297,28 @@ class TestEdgeColoring:
 class TestMatchingHelpers:
     """Tests for :mod:`axiom.matching`."""
 
-    def test_greedy_maximal_matching(self) -> None:
+    def test_greedy(self) -> None:
         g = Adjacency(4)
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         g.add_edge(2, 3)
-        m = greedy_maximal_matching(g)
+        m = greedy(g)
         assert check_maximal_matching(g, m)
 
     def test_greedy_empty_graph(self) -> None:
         g = Adjacency(3)
-        m = greedy_maximal_matching(g)
+        m = greedy(g)
         assert m == set()
 
-    def test_partner_of(self) -> None:
+    def test_partner_in(self) -> None:
         m = {(0, 1), (2, 3)}
-        assert partner_of(m, 0) == 1
-        assert partner_of(m, 3) == 2
-        assert partner_of(m, 5) is None
+        assert partner_in(m, 0) == 1
+        assert partner_in(m, 3) == 2
+        assert partner_in(m, 5) is None
 
-    def test_build_partner_map(self) -> None:
+    def test_partners(self) -> None:
         m = {(0, 1), (2, 3)}
-        pmap = build_partner_map(m)
+        pmap = partners(m)
         assert pmap == {0: 1, 1: 0, 2: 3, 3: 2}
 
 
@@ -776,7 +776,7 @@ class TestMatcher:
     def test_rematch_u_no_phantom_edge_from_stale_list(self) -> None:
         """Regression: a stale lambda list must not produce a phantom edge."""
         from axiom.core import Matcher
-        from axiom.types import canonical_edge
+        from axiom.types import canonical
 
         algo = Matcher(4, mode="basic")
         algo.insert(0, 1)
@@ -799,7 +799,7 @@ class TestMatcher:
         algo.matched_vertices.add(2)
         algo._Matcher__rematch_u(0)
         # Phantom edge (0,3) must not be added.
-        assert canonical_edge(0, 3) not in algo.matched_edges
+        assert canonical(0, 3) not in algo.matched_edges
 
     def test_partition_m_color_range_error(self) -> None:
         """Regression: out-of-range colors from abb_edge_color must raise."""
