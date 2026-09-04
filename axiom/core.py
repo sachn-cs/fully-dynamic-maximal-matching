@@ -40,7 +40,7 @@ from axiom.ledger import Ledger
 from axiom.color import Greedy
 from axiom.graph import Adjacency
 from axiom.invariant import check_maximal_matching
-from axiom.matching import partners, greedy, partner_in
+from axiom.matching import partners, greedy
 from axiom.types import (
     Colorer,
     Graph,
@@ -74,6 +74,7 @@ class Matcher:
         matched_edges: The maintained maximal matching.
         matched_vertices: Convenience cache of vertices incident to
             some edge of the matching.
+        partners: Bidirectional partner map for O(1) partner lookup.
         z: Degree parameter of the active :math:`z`-system.
         phase_length: Number of updates between full rebuilds.
         subphase_length: Number of updates between lightweight seed
@@ -124,6 +125,7 @@ class Matcher:
         self.colorer = colorer if colorer is not None else Greedy()
         self.matched_edges: Matching = set()
         self.matched_vertices: set[Vertex] = set()
+        self.partners: dict[Vertex, Vertex] = {}
 
         self.z: int = 0
         self.phase_length: int = 0
@@ -233,10 +235,49 @@ class Matcher:
 
         self.seed_matching = self.matchings[0] if self.matchings else set()
 
+    def add_match(self, u: Vertex, v: Vertex) -> None:
+        """Add edge ``(u, v)`` to the maintained matching.
+
+        Updates all three matching views (edge set, vertex set, partner
+        map) atomically.  Callers must ensure that neither ``u`` nor
+        ``v`` is already matched.
+
+        Args:
+            u: One endpoint.
+            v: The other endpoint.
+        """
+        e = canonical(u, v)
+        self.matched_edges.add(e)
+        self.matched_vertices.add(u)
+        self.matched_vertices.add(v)
+        self.partners[u] = v
+        self.partners[v] = u
+
+    def drop_match(self, u: Vertex, v: Vertex) -> None:
+        """Remove edge ``(u, v)`` from the maintained matching.
+
+        Updates all three matching views (edge set, vertex set, partner
+        map) atomically.  Callers must ensure that ``(u, v)`` is in the
+        matching.
+
+        Args:
+            u: One endpoint.
+            v: The other endpoint.
+        """
+        e = canonical(u, v)
+        self.matched_edges.discard(e)
+        self.matched_vertices.discard(u)
+        self.matched_vertices.discard(v)
+        self.partners.pop(u, None)
+        self.partners.pop(v, None)
+
     def __rebuild_matching(self) -> None:
         if self.system is None:
             self.matched_edges = greedy(self.graph)
             self.matched_vertices = {v for e in self.matched_edges for v in e}
+            self.partners = {x: y for x, y in self.matched_edges} | {
+                y: x for x, y in self.matched_edges
+            }
             self.accountant.record_greedy_rebuild(self.n)
             return
 
@@ -255,6 +296,9 @@ class Matcher:
 
         self.matched_edges = matching
         self.matched_vertices = matched
+        self.partners = {x: y for x, y in matching} | {
+            y: x for x, y in matching
+        }
 
     def __check_subphase_boundary(self) -> bool:
         if self.update_count > 0 and self.update_count % self.subphase_length == 0:
@@ -351,14 +395,8 @@ class Matcher:
                             to_remove = (x, y)
                             break
                     if to_remove is not None:
-                        self.matched_edges.discard(to_remove)
-                        self.matched_vertices.discard(u_vert)
-                        self.matched_vertices.discard(
-                            to_remove[0] if to_remove[1] == u_vert else to_remove[1]
-                        )
-                        self.matched_edges.add(e)
-                        self.matched_vertices.add(a)
-                        self.matched_vertices.add(u_vert)
+                        self.drop_match(*to_remove)
+                        self.add_match(a, u_vert)
                         self.accountant.record_insertion()
                         return
                     else:
@@ -368,11 +406,8 @@ class Matcher:
         self.accountant.record_insertion()
 
     def __handle_deletion(self, u: Vertex, v: Vertex) -> None:
-        e = canonical(u, v)
-        if e in self.matched_edges:
-            self.matched_edges.discard(e)
-            self.matched_vertices.discard(u)
-            self.matched_vertices.discard(v)
+        if canonical(u, v) in self.matched_edges:
+            self.drop_match(u, v)
 
         self.__cleanup_stale_edges()
         self.__rematch_vertex(u)
@@ -387,9 +422,7 @@ class Matcher:
     def __cleanup_stale_edges(self) -> None:
         stale = [e for e in self.matched_edges if not self.graph.has_edge(e[0], e[1])]
         for e in stale:
-            self.matched_edges.discard(e)
-            self.matched_vertices.discard(e[0])
-            self.matched_vertices.discard(e[1])
+            self.drop_match(e[0], e[1])
         if stale:
             self.accountant.record_stale_cleanup(len(stale))
 
@@ -399,9 +432,7 @@ class Matcher:
         if self.system is None:
             for w in self.graph.neighbors(v):
                 if w not in self.matched_vertices:
-                    self.matched_edges.add(canonical(v, w))
-                    self.matched_vertices.add(v)
-                    self.matched_vertices.add(w)
+                    self.add_match(v, w)
                     return
             return
 
@@ -417,17 +448,13 @@ class Matcher:
 
         for w in self.graph.neighbors(v):
             if w not in self.matched_vertices:
-                self.matched_edges.add(canonical(v, w))
-                self.matched_vertices.add(v)
-                self.matched_vertices.add(w)
+                self.add_match(v, w)
                 return
 
     def __rematch_u(self, u: Vertex) -> None:
         for w in self.system.lambda_lists.get(u, []):
             if w not in self.matched_vertices and self.graph.has_edge(u, w):
-                self.matched_edges.add(canonical(u, w))
-                self.matched_vertices.add(u)
-                self.matched_vertices.add(w)
+                self.add_match(u, w)
                 self.accountant.record_rematch_u_scan()
                 return
 
@@ -435,9 +462,7 @@ class Matcher:
         for w in self.system.S:
             if w not in self.matched_vertices:
                 if self.graph.has_edge(u, w):
-                    self.matched_edges.add(canonical(u, w))
-                    self.matched_vertices.add(u)
-                    self.matched_vertices.add(w)
+                    self.add_match(u, w)
                     self.accountant.record_rematch_u_scan(scanned + 1)
                     return
             scanned += 1
@@ -451,9 +476,7 @@ class Matcher:
                 and b in self.system.lambda_lists.get(u, [])
                 and self.graph.has_edge(u, b)
             ):
-                self.matched_edges.add(canonical(u, b))
-                self.matched_vertices.add(u)
-                self.matched_vertices.add(b)
+                self.add_match(u, b)
                 self.accountant.record_rematch_b_scan(scanned + 1)
                 return
             scanned += 1
@@ -462,9 +485,7 @@ class Matcher:
         for w in self.system.S:
             if w not in self.matched_vertices:
                 if self.graph.has_edge(b, w):
-                    self.matched_edges.add(canonical(b, w))
-                    self.matched_vertices.add(b)
-                    self.matched_vertices.add(w)
+                    self.add_match(b, w)
                     return
 
     def __rematch_a(self, a: Vertex) -> None:
@@ -480,21 +501,16 @@ class Matcher:
                 if scanned > limit:
                     break
                 if u not in self.matched_vertices and self.graph.has_edge(a, u):
-                    self.matched_edges.add(canonical(a, u))
-                    self.matched_vertices.add(a)
-                    self.matched_vertices.add(u)
+                    self.add_match(a, u)
                     self.accountant.record_rematch_a_scan(scanned)
                     return
-                p = partner_in(self.matched_edges, u)
+                p = self.partner(u)
                 if p is not None and p in self.system.A:
                     continue
                 if p is not None:
-                    self.matched_edges.discard(canonical(u, p))
-                    self.matched_vertices.discard(p)
+                    self.drop_match(u, p)
                 if self.graph.has_edge(a, u):
-                    self.matched_edges.add(canonical(a, u))
-                    self.matched_vertices.add(a)
-                    self.matched_vertices.add(u)
+                    self.add_match(a, u)
                     if p is not None:
                         self.__rematch_vertex(p)
                     self.accountant.record_rematch_a_scan(scanned)
@@ -505,19 +521,14 @@ class Matcher:
                 if scanned > limit:
                     break
                 if u not in self.matched_vertices and self.graph.has_edge(a, u):
-                    self.matched_edges.add(canonical(a, u))
-                    self.matched_vertices.add(a)
-                    self.matched_vertices.add(u)
+                    self.add_match(a, u)
                     self.accountant.record_rematch_a_scan(scanned)
                     return
-                p = partner_in(self.matched_edges, u)
+                p = self.partner(u)
                 if p is not None and p not in self.system.A:
                     if self.graph.has_edge(a, u):
-                        self.matched_edges.discard(canonical(u, p))
-                        self.matched_vertices.discard(p)
-                        self.matched_edges.add(canonical(a, u))
-                        self.matched_vertices.add(a)
-                        self.matched_vertices.add(u)
+                        self.drop_match(u, p)
+                        self.add_match(a, u)
                         if p is not None:
                             self.__rematch_vertex(p)
                         self.accountant.record_rematch_a_scan(scanned)
@@ -527,9 +538,7 @@ class Matcher:
 
         for w in self.graph.neighbors(a):
             if w not in self.matched_vertices:
-                self.matched_edges.add(canonical(a, w))
-                self.matched_vertices.add(a)
-                self.matched_vertices.add(w)
+                self.add_match(a, w)
                 return
 
     def __advance_update_counter(self) -> None:
@@ -575,9 +584,10 @@ class Matcher:
             v's partner, or None if unmatched.
 
         Complexity:
-            O(|M*|).
+            O(1) via the partner map maintained in lockstep with the
+            matching.
         """
-        return partner_in(self.matched_edges, v)
+        return self.partners.get(v)
 
     def partners(self) -> dict[Vertex, Vertex]:
         """Return a dict mapping each matched vertex to its partner.
