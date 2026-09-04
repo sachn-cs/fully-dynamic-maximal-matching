@@ -72,19 +72,24 @@ def check_maximal_matching(graph: Graph, matching: Matching) -> bool:
     return True
 
 
-def check_multi_level_i3(multi: Hierarchy) -> bool:
+def check_i3(multi: Hierarchy, matching: Matching, r: int, z: int) -> bool:
     """Return ``True`` iff invariant (I3) is satisfied for ``multi``.
 
-    Wraps :meth:`Hierarchy.level_1_invariant_I3` and converts
-    the unavoidable :class:`NotImplementedError` into a ``False``
-    answer.  This makes the invariant conservative: the checker will
-    *never* silently pass.
+    Wraps :meth:`Hierarchy.check_i3` with the paper's :math:`2\\tau`
+    constant (``\\tau = 32 r / z``).  See the docstring on
+    :meth:`Hierarchy.check_i3` for the exact statement.
 
-    **Fidelity note:** The paper states (I3) as ``O(r / z)`` but does
-    not give the exact constant in the excerpt.  This module makes no
-    attempt to guess it.
+    Args:
+        multi: The multi-level system.
+        matching: The maintained maximal matching M*.
+        r: The phase length.
+        z: The :math:`z` parameter of the active level-1 system.
+
+    Returns:
+        ``True`` iff at most :math:`2\\tau` vertices of :math:`A_1` are
+        matched by M* into :math:`R_1`.
+
+    Complexity:
+        :math:`O(|M^*|)`.
     """
-    try:
-        return multi.level_1_invariant_I3()
-    except NotImplementedError:
-        return False
+    return multi.check_i3(matching, r, z)

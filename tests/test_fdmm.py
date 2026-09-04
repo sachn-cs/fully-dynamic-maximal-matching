@@ -848,18 +848,26 @@ class TestHierarchy:
         ]
         assert len(mls.levels) == 2
 
-    def test_level_1_invariant_I3_empty(self) -> None:
+    def test_check_i3_empty(self) -> None:
         g = Adjacency(0)
         mls = Hierarchy(graph=g, k=1)
-        with pytest.raises(NotImplementedError):
-            mls.level_1_invariant_I3()
+        # Empty graph: trivial satisfaction.
+        assert mls.check_i3(set(), r=10, z=2) is True
 
-    def test_check_multi_level_i3_returns_false(self) -> None:
-        from axiom.invariant import check_multi_level_i3
-
-        g = Adjacency(0)
-        mls = Hierarchy(graph=g, k=1)
-        assert check_multi_level_i3(mls) is False
+    def test_check_i3_trivial_match(self) -> None:
+        g = Adjacency(4)
+        mls = Hierarchy(
+            graph=g,
+            k=1,
+            A1={0},
+            A2={1},
+            N1={1, 2},
+            R1={3},
+        )
+        # Edge (0, 3) crosses A1 and R1. With r=10 and z=2, the bound
+        # is 2*tau = 2 * (32 * 10 / 2) = 320; the matching trivially
+        # satisfies I3.
+        assert mls.check_i3({(0, 3)}, r=10, z=2) is True
 
 
 # ------------------------------------------------------------------

@@ -48,7 +48,7 @@ from axiom.color import (
     recolor,
 )
 from axiom.graph import Adjacency
-from axiom.invariant import check_maximal_matching, valid
+from axiom.invariant import check_i3, check_maximal_matching, valid
 from axiom.core import Matcher
 from axiom.matching import partners, greedy, partner_in
 from axiom.parallel import compare, run_parallel
@@ -87,6 +87,7 @@ __all__ = [
     "partners",
     "check_maximal_matching",
     "valid",
+    "check_i3",
     "Ledger",
     "random_update_sequence",
     "replay_updates",

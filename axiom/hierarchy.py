@@ -58,22 +58,40 @@ class Hierarchy:
     N1: set[Vertex] = field(default_factory=set)
     R1: set[Vertex] = field(default_factory=set)
 
-    def level_1_invariant_I3(self) -> bool:
+    def check_i3(self, matching: set[tuple[int, int]], r: int, z: int) -> bool:
         """Check multi-level invariant (I3).
 
-        At most :math:`O(r / z)` vertices of :math:`A_1` are matched to
-        :math:`R_1`.  The exact constant is not provided in the paper excerpt,
-        so this method raises :class:`NotImplementedError` to prevent silent
-        false positives.  Callers that need a boolean answer should use
-        :func:`axiom.invariant.check_multi_level_i3`, which converts the
-        error into ``False``.
+        At most :math:`2\\tau` vertices of :math:`A_1` are matched by
+        :math:`M^*` into :math:`R_1`, where :math:`\\tau = 32 r / z`
+        (Section 6.2 of the paper).  In other words, the count of
+        edges of the matching that connect a vertex of :math:`A_1`
+        to a vertex of :math:`R_1` is at most :math:`2\\tau = 64 r / z`.
 
-        Raises:
-            NotImplementedError: Always -- the precise constant is unknown.
+        Args:
+            matching: The maintained maximal matching M*.
+            r: The phase length (set by the :class:`axiom.rebuild.Rebuild`
+                policy at construction).
+            z: The :math:`z` parameter of the active level-1 system.
+
+        Returns:
+            ``True`` iff the invariant holds.  The constant is the
+            paper's :math:`2\\tau`; we treat it as ``64 r / z``
+            (``\\tau = 32 r / z``).
+
+        Complexity:
+            :math:`O(|M^*|)`.
         """
-        raise NotImplementedError(
-            "I3 check requires an exact constant not provided in the paper excerpt."
-        )
+        if z <= 0:
+            return True
+        tau = (32 * r) // z
+        bound = 2 * tau
+        count = 0
+        for u, v in matching:
+            if (u in self.A1 and v in self.R1) or (v in self.A1 and u in self.R1):
+                count += 1
+                if count > bound:
+                    return False
+        return True
 
 
 def build_hierarchy(graph: Graph, level_zs: list[int]) -> Hierarchy:
