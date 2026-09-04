@@ -22,8 +22,8 @@ _src = os.path.join(_repo_root, "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-from fdmm.dynamic_matching import DynamicMaximalMatching  # noqa: E402
-from fdmm.simulation import random_update_sequence  # noqa: E402
+from maxmatch.matcher import MaximalMatcher  # noqa: E402
+from maxmatch.simulation import random_update_sequence  # noqa: E402
 
 
 def run_demo(n: int, mode: str, num_updates: int, seed: int = 42) -> int:
@@ -40,7 +40,7 @@ def run_demo(n: int, mode: str, num_updates: int, seed: int = 42) -> int:
     """
     print(f"=== FDMM Demo: n={n}, mode={mode}, updates={num_updates} ===\n")
 
-    algo = DynamicMaximalMatching(n, mode=mode)
+    algo = MaximalMatcher(n, mode=mode)
     rng = random.Random(seed)
     updates = list(random_update_sequence(n, num_updates, rng))
 
