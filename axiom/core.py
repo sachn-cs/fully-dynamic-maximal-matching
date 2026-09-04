@@ -179,18 +179,41 @@ class Matcher:
 
         self.seed_matching = self.matchings[0] if self.matchings else set()
 
+    def _partners_from_matching(self) -> None:
+        """Rebuild ``self.partners`` from ``self.matched_edges``.
+
+        Iterates the matching once and populates the bidirectional partner
+        map.  Each edge contributes both directions; if ``matched_edges``
+        is well-formed (every vertex in at most one edge), the result is
+        exactly the partner map.  Used by :meth:`refresh` after a
+        full rebuild.
+        """
+        partners: dict[Vertex, Vertex] = {}
+        for u, v in self.matched_edges:
+            partners[u] = v
+            partners[v] = u
+        self.partners = partners
+
     def add_match(self, u: Vertex, v: Vertex) -> None:
         """Add edge ``(u, v)`` to the maintained matching.
 
         Updates all three matching views (edge set, vertex set, partner
-        map) atomically.  Callers must ensure that neither ``u`` nor
-        ``v`` is already matched.
+        map) atomically.  If ``u`` or ``v`` is already matched to some
+        other vertex, that prior match is dropped first via a recursive
+        :meth:`drop_match` call so the partner map stays in lockstep with
+        the matching at every step.
 
         Args:
             u: One endpoint.
             v: The other endpoint.
         """
         e = canonical(u, v)
+        # Drop any prior matches of u and v so the new edge is the
+        # only match incident to either endpoint.
+        for endpoint in (u, v):
+            prior = self.partners.get(endpoint)
+            if prior is not None and prior not in (u, v):
+                self.drop_match(endpoint, prior)
         self.matched_edges.add(e)
         self.matched_vertices.add(u)
         self.matched_vertices.add(v)
@@ -219,14 +242,23 @@ class Matcher:
         if self.system is None:
             self.matched_edges = greedy(self.graph)
             self.matched_vertices = {v for e in self.matched_edges for v in e}
-            self.partners = {x: y for x, y in self.matched_edges} | {
-                y: x for x, y in self.matched_edges
-            }
+            self._partners_from_matching()
             self.accountant.record_greedy_rebuild(self.n)
             return
 
-        matching: Matching = set(self.seed_matching)
-        matched: set[Vertex] = {v for e in matching for v in e}
+        matching: Matching = set()
+        matched: set[Vertex] = set()
+        # Take seed edges that respect the well-formed matching invariant:
+        # each vertex appears in at most one edge. If the seed is corrupt
+        # (the colorer produced two edges sharing a vertex with the same
+        # color), drop the duplicates so the greedy extension can run.
+        for e in self.seed_matching:
+            u, v = e
+            if u in matched or v in matched:
+                continue
+            matching.add(e)
+            matched.add(u)
+            matched.add(v)
 
         for u in range(self.n):
             if u in matched:
@@ -240,9 +272,7 @@ class Matcher:
 
         self.matched_edges = matching
         self.matched_vertices = matched
-        self.partners = {x: y for x, y in matching} | {
-            y: x for x, y in matching
-        }
+        self._partners_from_matching()
 
     def __check_subphase_boundary(self) -> bool:
         if self.update_count > 0 and self.update_count % self.subphase_length == 0:

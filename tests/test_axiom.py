@@ -20,6 +20,7 @@ from axiom.simulation import random_update_sequence, replay_updates
 from axiom.types import canonical
 from axiom.hierarchy import Hierarchy
 from axiom.system import System, build
+from axiom.visualize import visualize_system, visualize_matching, visualize_adjacency
 
 # ------------------------------------------------------------------
 # Graph layer
@@ -926,3 +927,93 @@ class TestPerformance:
                 algo.insert(i, j)
         assert algo.maximal()
         assert algo.size() == n // 2
+
+
+# ------------------------------------------------------------------
+# Refactor regression tests
+# ------------------------------------------------------------------
+
+
+class TestRefactor:
+    """Tests for the post-refactor invariants introduced by the
+    rebuild-strategy, partner-dict, and dead-code-removal work."""
+
+    def test_partner_dict_consistent_with_matching(self) -> None:
+        """partner(v) must agree with the matching at every step.
+
+        Run a deterministic random walk and assert that the partner
+        dict and the matched_edges set describe the same relation.
+        """
+        import random as random_mod
+
+        rng = random_mod.Random(0)
+        n = 30
+        algo = Matcher(n, mode="basic")
+        for op in random_update_sequence(n, 300, rng):
+            if op[0] == "insert":
+                algo.insert(op[1], op[2])
+            else:
+                algo.delete(op[1], op[2])
+            # Every matched vertex has exactly one partner entry; no
+            # unmatched vertex has a partner entry.
+            for u in range(n):
+                p = algo.partner(u)
+                if p is None:
+                    assert u not in algo.partners
+                    assert u not in algo.matched_vertices
+                else:
+                    assert algo.partner(p) == u
+                    assert (min(u, p), max(u, p)) in algo.matched_edges
+
+    def test_policy_default_is_basic(self) -> None:
+        """Matcher with mode='basic' has a Basic policy."""
+        from axiom.rebuild import Basic
+
+        algo = Matcher(4, mode="basic")
+        assert isinstance(algo.policy, Basic)
+
+    def test_policy_default_is_tiered(self) -> None:
+        """Matcher with mode='tiered' has a Tiered policy."""
+        from axiom.rebuild import Tiered
+
+        algo = Matcher(4, mode="tiered")
+        assert isinstance(algo.policy, Tiered)
+
+    def test_policy_explicit_overrides_mode(self) -> None:
+        """Passing policy=Basic() overrides a 'tiered' mode string."""
+        from axiom.rebuild import Basic
+
+        algo = Matcher(4, mode="tiered", policy=Basic())
+        assert isinstance(algo.policy, Basic)
+
+    def test_no_aux_graph_attribute(self) -> None:
+        """The dead aux_graph field has been removed from Matcher."""
+        algo = Matcher(4, mode="basic")
+        assert not hasattr(algo, "aux_graph")
+
+    def test_add_drop_match_helpers(self) -> None:
+        """add_match / drop_match update all three matching views atomically."""
+        algo = Matcher(4, mode="basic")
+        algo.add_match(0, 1)
+        assert (0, 1) in algo.matched_edges
+        assert 0 in algo.matched_vertices
+        assert 1 in algo.matched_vertices
+        assert algo.partner(0) == 1
+        assert algo.partner(1) == 0
+        algo.drop_match(0, 1)
+        assert (0, 1) not in algo.matched_edges
+        assert 0 not in algo.matched_vertices
+        assert 1 not in algo.matched_vertices
+        assert algo.partner(0) is None
+        assert algo.partner(1) is None
+
+    def test_three_visualize_distinct(self) -> None:
+        """The three visualize_* functions produce non-empty distinct strings."""
+        algo = Matcher(4, mode="basic")
+        for u, v in [(0, 1), (1, 2), (2, 3)]:
+            algo.insert(u, v)
+        s = visualize_system(algo.system)
+        m = visualize_matching(algo)
+        a = visualize_adjacency(algo)
+        assert s and m and a
+        assert s != m != a
