@@ -30,7 +30,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from axiom.system import System, build as build_z_system
+from axiom.system import System
+from axiom.system import build as build_z_system
 from axiom.types import Graph, Vertex
 
 
@@ -99,8 +100,8 @@ class Hierarchy:
         matching: set[tuple[int, int]],
         r: int,
         z: int,
-        partner_of: "Callable[[Vertex], Vertex | None]",
-        rematch: "Callable[[Vertex], None]",
+        partner_of: Callable[[Vertex], Vertex | None],
+        rematch: Callable[[Vertex], None],
     ) -> int:
         """Repair any violation of invariant (I3).
 

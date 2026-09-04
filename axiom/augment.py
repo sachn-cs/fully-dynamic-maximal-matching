@@ -43,9 +43,9 @@ def flip(coloring: set[Edge], path: list[Vertex]) -> None:
 
 def augment(
     matching: set[Edge],
-    neighbors: "Callable[[Vertex], Iterable[Vertex]]",
+    neighbors: Callable[[Vertex], Iterable[Vertex]],
     start: Vertex,
-    is_matched: "Callable[[Vertex], bool]",
+    is_matched: Callable[[Vertex], bool],
 ) -> bool:
     """Try to augment ``matching`` by an alternating path starting at ``start``.
 
