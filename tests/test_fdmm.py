@@ -19,7 +19,7 @@ from axiom.matching import partners, greedy, partner_in
 from axiom.simulation import random_update_sequence, replay_updates
 from axiom.types import canonical
 from axiom.hierarchy import Hierarchy
-from axiom.system import System, build_z_system
+from axiom.system import System, build
 
 # ------------------------------------------------------------------
 # Graph layer
@@ -439,11 +439,11 @@ class TestSystem:
 
 
 class TestBuildZSystem:
-    """Tests for :func:`axiom.system.build_z_system`."""
+    """Tests for :func:`axiom.system.build`."""
 
     def test_build_on_empty_graph(self) -> None:
         g = Adjacency(4)
-        system = build_z_system(g, z=1)
+        system = build(g, z=1)
         assert system.check_bound()
         assert system.check_u()
 
@@ -451,7 +451,7 @@ class TestBuildZSystem:
         g = Adjacency(5)
         for i in range(4):
             g.add_edge(i, i + 1)
-        system = build_z_system(g, z=2)
+        system = build(g, z=2)
         assert system.check_bound()
         assert system.check_p2()
 
@@ -461,7 +461,7 @@ class TestBuildZSystem:
         # star: vertex 0 has degree 3, leaves degree 1
         for i in range(1, 4):
             g.add_edge(0, i)
-        system = build_z_system(g, z=2)
+        system = build(g, z=2)
         # M is a greedy maximal matching with cap 2.
         # It will contain (0,1) and (0,2).  Vertex 0 now has degree 2 in M -> S.
         # Leaves 1 and 2 have degree 1 in M (< 2) -> U.
@@ -476,7 +476,7 @@ class TestBuildZSystem:
         g = Adjacency(10)
         for i in range(9):
             g.add_edge(i, i + 1)
-        system = build_z_system(g, z=2)
+        system = build(g, z=2)
         assert system.check_bound()
         assert system.check_p2()
         assert system.check_lambda()

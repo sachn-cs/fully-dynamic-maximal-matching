@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from axiom.system import System, build_z_system
+from axiom.system import System, build
 from axiom.types import Graph, Vertex
 
 
@@ -107,14 +107,14 @@ def build_hierarchy(graph: Graph, level_zs: list[int]) -> Hierarchy:
 
     Complexity:
         Linear in the number of levels times the cost of
-        :func:`axiom.system.build_z_system`.
+        :func:`axiom.system.build`.
     """
     hierarchy = Hierarchy(graph=graph, k=len(level_zs))
 
     # Levels are rebuilt independently for clarity, even though the
     # paper describes a recursive refinement.
     for z in level_zs:
-        level = build_z_system(graph, z)
+        level = build(graph, z)
         hierarchy.levels.append(level)
 
     if hierarchy.levels:

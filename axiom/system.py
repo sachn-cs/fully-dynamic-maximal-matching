@@ -32,14 +32,14 @@ References:
 Assumptions:
     * Vertex labels are dense integers ``0 .. n-1`` (a property inherited
       from :class:`axiom.graph.Graph`).
-    * The system is freshly constructed via :func:`build_z_system`; it is
+    * The system is freshly constructed via :func:`build`; it is
       the caller's responsibility to maintain :math:`\Lambda` and
       :math:`L` thereafter (or to invoke :meth:`build_lambda_and_L`).
 
 Limitations:
     * The exact edge-switching rule of the paper's Step 2 construction
       is replaced with a BFS-based augmenting-path heuristic.  See the
-      notes on :func:`edge_switch_inside_B`.
+      notes on :func:`switch`.
 """
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ class System:
             :math:`L(a) = N_G(a) \cap U`.
 
     Lifecycle:
-        A system is normally built by :func:`build_z_system`.  After any
+        A system is normally built by :func:`build`.  After any
         mutation of ``self.graph`` the cached lists in ``lambda_lists``
         and ``L_lists`` must be refreshed via
         :meth:`build_lambda_and_L`.  Mutating ``A``, ``B``, ``U``, or
@@ -330,7 +330,7 @@ class System:
 
 
 
-def edge_switch_inside_B(
+def switch(
     graph: Graph,
     M: set[Edge],
     deg_M: dict[Vertex, int],
@@ -467,7 +467,7 @@ def edge_switch_inside_B(
     return False
 
 
-def promote_u_vertex(
+def promote(
     graph: Graph,
     system: System,
     M: set[Edge],
@@ -481,7 +481,7 @@ def promote_u_vertex(
     The procedure runs in two phases.  First, it greedily adds edges
     from ``u`` to unsaturated B-neighbours until either ``z`` such edges
     exist or no unsaturated neighbour remains.  Second, it invokes
-    :func:`edge_switch_inside_B` to recover capacity from saturated
+    :func:`switch` to recover capacity from saturated
     B-vertices until the count reaches ``z``.
 
     After promotion, ``u`` is moved from ``U`` to ``B``; any B-vertex
@@ -525,7 +525,7 @@ def promote_u_vertex(
     if added < z:
         needed = z - added
         for _ in range(needed):
-            if edge_switch_inside_B(graph, M, deg_M, z, u, b_neighbors):
+            if switch(graph, M, deg_M, z, u, b_neighbors):
                 added += 1
             else:
                 # Out of recoverable capacity -- leave u in U.
@@ -552,7 +552,7 @@ def promote_u_vertex(
     return False
 
 
-def build_z_system(graph: Graph, z: int) -> System:
+def build(graph: Graph, z: int) -> System:
     r"""Build a :math:`z`-subgraph system from scratch.
 
     Implements the two-step deterministic construction from Section 5.2
@@ -574,7 +574,7 @@ def build_z_system(graph: Graph, z: int) -> System:
     * :math:`v \in U` iff :math:`\deg_M(v) < z`.
 
     Step 2 -- promote U-vertices to B until no further promotion is
-    possible.  Promotion is handled by :func:`promote_u_vertex` which
+    possible.  Promotion is handled by :func:`promote` which
     tries direct edges first and falls back to edge-switching inside B.
 
     **Fidelity note:** Step 2 uses an alternating-path edge-switching
@@ -635,7 +635,7 @@ def build_z_system(graph: Graph, z: int) -> System:
     while changed:
         changed = False
         for u in list(system.U):
-            if promote_u_vertex(graph, system, M, deg_M, z, u):
+            if promote(graph, system, M, deg_M, z, u):
                 changed = True
 
     system.M = M

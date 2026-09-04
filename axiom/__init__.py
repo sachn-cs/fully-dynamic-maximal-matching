@@ -18,8 +18,8 @@ The supporting modules provide:
 * :class:`System` and :class:`Hierarchy` -- the
   combinatorial state used by both modes.
 * The :math:`z`-system construction primitives
-  :func:`build_z_system`, :func:`build_hierarchy`,
-  :func:`edge_switch_inside_B`, and :func:`promote_u_vertex`.
+  :func:`build`, :func:`build_hierarchy`,
+  :func:`switch`, and :func:`promote`.
 * The edge colouring utilities :class:`Greedy`,
   :class:`Vizing`, :func:`recolor`,
   :func:`find`, :func:`color_one`,
@@ -62,9 +62,9 @@ from axiom.visualize import (
 from axiom.hierarchy import Hierarchy, build_hierarchy
 from axiom.system import (
     System,
-    build_z_system,
-    edge_switch_inside_B,
-    promote_u_vertex,
+    build,
+    switch,
+    promote,
 )
 
 __version__ = "0.5.0"
@@ -102,8 +102,8 @@ __all__ = [
     "color_one",
     "recolor",
     "find",
-    "build_z_system",
+    "build",
     "build_hierarchy",
-    "edge_switch_inside_B",
-    "promote_u_vertex",
+    "switch",
+    "promote",
 ]

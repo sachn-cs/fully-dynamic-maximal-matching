@@ -49,7 +49,7 @@ from axiom.types import (
     canonical,
 )
 from axiom.hierarchy import Hierarchy
-from axiom.system import System, build_z_system
+from axiom.system import System, build
 
 
 class Matcher:
@@ -170,7 +170,7 @@ class Matcher:
         self.__rebuild_multilevel()
 
     def __rebuild_basic(self) -> None:
-        self.system = build_z_system(self.graph, self.z)
+        self.system = build(self.graph, self.z)
         self.__partition_m_into_matchings()
         self.__rebuild_matching()
         self.update_count = 0
@@ -181,7 +181,7 @@ class Matcher:
         self.multi = Hierarchy(graph=self.graph, k=self.k)
         self.multi.levels = []
         for z in self.level_zs:
-            level = build_z_system(self.graph, z)
+            level = build(self.graph, z)
             self.multi.levels.append(level)
 
         if self.multi.levels:
