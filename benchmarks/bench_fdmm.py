@@ -18,12 +18,12 @@ _src = __import__("os").path.join(_repo_root, "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-from fdmm.dynamic_matching import DynamicMaximalMatching
-from fdmm.simulation import random_update_sequence
+from maxmatch.matcher import MaximalMatcher
+from maxmatch.simulation import random_update_sequence
 
 
 def bench(n: int, mode: str, updates: int, seed: int) -> dict[str, float]:
-    algo = DynamicMaximalMatching(n, mode=mode)
+    algo = MaximalMatcher(n, mode=mode)
     rng = random.Random(seed)
     seq = list(random_update_sequence(n, updates, rng))
 
