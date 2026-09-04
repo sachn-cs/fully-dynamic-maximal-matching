@@ -36,7 +36,7 @@ def valid(system: System) -> bool:
     Complexity:
         :math:`O(n + m)`.
     """
-    return system.check_all_invariants()
+    return system.check()
 
 
 def check_maximal_matching(graph: Graph, matching: Matching) -> bool:

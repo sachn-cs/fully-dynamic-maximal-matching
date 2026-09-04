@@ -343,12 +343,12 @@ class TestSystem:
         system.B = {3, 4}
         system.U = {5}
         system.M = {(0, 1), (3, 4)}
-        system.build_lambda_and_L()
+        system.index()
 
         assert system.S == {0, 1, 2, 3, 4}
-        assert system.degree_in_M(0) == 1
-        assert system.degree_in_M(5) == 0
-        assert system.check_P2()
+        assert system.degree(0) == 1
+        assert system.degree(5) == 0
+        assert system.check_p2()
 
     def test_lambda_lists(self) -> None:
         g = Adjacency(4)
@@ -359,7 +359,7 @@ class TestSystem:
         system.U = {0}
         system.B = {1, 2}
         system.A = {3}
-        system.build_lambda_and_L()
+        system.index()
         assert set(system.lambda_lists[0]) == {1, 2}
         assert set(system.L_lists[3]) == {0}
 
@@ -369,19 +369,19 @@ class TestSystem:
         g.add_edge(1, 2)
         g.add_edge(2, 3)
         system = System(graph=g, z=2)
-        assert system.is_maximal_matching({(0, 1), (2, 3)})
-        assert not system.is_maximal_matching({(0, 1)})
+        assert system.maximal({(0, 1), (2, 3)})
+        assert not system.maximal({(0, 1)})
 
     def test_empty_graph_maximal(self) -> None:
         g = Adjacency(3)
         system = System(graph=g, z=1)
-        assert system.is_maximal_matching(set())
+        assert system.maximal(set())
 
     def test_single_edge_maximal(self) -> None:
         g = Adjacency(2)
         g.add_edge(0, 1)
         system = System(graph=g, z=1)
-        assert system.is_maximal_matching({(0, 1)})
+        assert system.maximal({(0, 1)})
 
     def test_check_degree_bounds_empty(self) -> None:
         g = Adjacency(3)
@@ -389,7 +389,7 @@ class TestSystem:
         system.A = set()
         system.B = set()
         system.U = {0, 1, 2}
-        assert system.check_degree_bounds()
+        assert system.check_bound()
 
     def test_P1_violation(self) -> None:
         g = Adjacency(4)
@@ -399,7 +399,7 @@ class TestSystem:
         system.U = {3}
         system.B = {0, 1, 2}
         system.A = set()
-        assert not system.check_P1()
+        assert not system.check_p1()
 
     def test_P2_violation(self) -> None:
         g = Adjacency(3)
@@ -409,19 +409,19 @@ class TestSystem:
         system.B = set()
         system.U = {1, 2}
         system.M = {(0, 2)}
-        assert not system.check_P2()
+        assert not system.check_p2()
 
     def test_all_invariants_on_empty(self) -> None:
         g = Adjacency(0)
         system = System(graph=g, z=0)
-        assert system.check_all_invariants()
+        assert system.check()
 
     def test_degree_in_M_on_unmatched_vertex(self) -> None:
         g = Adjacency(4)
         g.add_edge(0, 1)
         system = System(graph=g, z=1)
         system.M = {(0, 1)}
-        assert system.degree_in_M(2) == 0
+        assert system.degree(2) == 0
 
     def test_neighbors_in_M(self) -> None:
         g = Adjacency(4)
@@ -429,8 +429,8 @@ class TestSystem:
         g.add_edge(0, 2)
         system = System(graph=g, z=2)
         system.M = {(0, 1), (0, 2)}
-        assert set(system.neighbors_in_M(0)) == {1, 2}
-        assert set(system.neighbors_in_M(1)) == {0}
+        assert set(system.partner_in(0)) == {1, 2}
+        assert set(system.partner_in(1)) == {0}
 
 
 # ------------------------------------------------------------------
@@ -444,16 +444,16 @@ class TestBuildZSystem:
     def test_build_on_empty_graph(self) -> None:
         g = Adjacency(4)
         system = build_z_system(g, z=1)
-        assert system.check_degree_bounds()
-        assert system.check_U_degree_in_U()
+        assert system.check_bound()
+        assert system.check_u()
 
     def test_build_on_path(self) -> None:
         g = Adjacency(5)
         for i in range(4):
             g.add_edge(i, i + 1)
         system = build_z_system(g, z=2)
-        assert system.check_degree_bounds()
-        assert system.check_P2()
+        assert system.check_bound()
+        assert system.check_p2()
 
     def test_build_step_one_partition(self) -> None:
         """Verify that A, B, U are defined from M, not from G-degree."""
@@ -467,7 +467,7 @@ class TestBuildZSystem:
         # Leaves 1 and 2 have degree 1 in M (< 2) -> U.
         # Vertex 3 has degree 0 in M -> U.
         assert 0 in system.S
-        assert system.degree_in_M(0) == 2
+        assert system.degree(0) == 2
         assert 1 in system.U or 1 in system.S
         assert 2 in system.U or 2 in system.S
         assert 3 in system.U
@@ -477,10 +477,10 @@ class TestBuildZSystem:
         for i in range(9):
             g.add_edge(i, i + 1)
         system = build_z_system(g, z=2)
-        assert system.check_degree_bounds()
-        assert system.check_P2()
-        assert system.check_lambda_lists()
-        assert system.check_L_lists()
+        assert system.check_bound()
+        assert system.check_p2()
+        assert system.check_lambda()
+        assert system.check_L()
 
 
 # ------------------------------------------------------------------

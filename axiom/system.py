@@ -100,7 +100,7 @@ class System:
         """Return the full vertex set of the host graph."""
         return set(range(self.graph.n))
 
-    def degree_in_M(self, v: Vertex) -> int:
+    def degree(self, v: Vertex) -> int:
         r"""Return the number of edges of :math:`M` incident to ``v``.
 
         Args:
@@ -119,7 +119,7 @@ class System:
                 deg += 1
         return deg
 
-    def neighbors_in_M(self, v: Vertex) -> Iterator[Vertex]:
+    def partner_in(self, v: Vertex) -> Iterator[Vertex]:
         r"""Yield neighbours of ``v`` that are joined by an edge of :math:`M`.
 
         Args:
@@ -135,7 +135,7 @@ class System:
             if canonical_edge(v, w) in self.M:
                 yield w
 
-    def check_degree_bounds(self) -> bool:
+    def check_bound(self) -> bool:
         r"""Check the basic degree bounds of the :math:`z`-system.
 
         Verifies two conditions:
@@ -151,14 +151,14 @@ class System:
             :math:`O(n + m)` -- one pass over the adjacency lists.
         """
         for v in self.S:
-            if self.degree_in_M(v) != self.z:
+            if self.degree(v) != self.z:
                 return False
         for u in self.U:
-            if self.degree_in_M(u) > self.z:
+            if self.degree(u) > self.z:
                 return False
         return True
 
-    def check_U_degree_in_U(self) -> bool:
+    def check_u(self) -> bool:
         r"""Check :math:`|N_G(u) \cap U| \le z` for all :math:`u \in U`.
 
         This cap on internal :math:`U`-edges is what stops the
@@ -176,7 +176,7 @@ class System:
                 return False
         return True
 
-    def check_P1(self) -> bool:
+    def check_p1(self) -> bool:
         r"""Check property (P1): :math:`|N_G(u) \cap B| \le 2z` for all :math:`u \in U`.
 
         P1 controls the size of the alternating search during rematching;
@@ -195,7 +195,7 @@ class System:
                 return False
         return True
 
-    def check_P2(self) -> bool:
+    def check_p2(self) -> bool:
         r"""Check property (P2): every :math:`M`-edge incident to
         :math:`a \in A` meets a vertex of :math:`S`.
 
@@ -209,12 +209,12 @@ class System:
             :math:`O(n + m)`.
         """
         for a in self.A:
-            for w in self.neighbors_in_M(a):
+            for w in self.partner_in(a):
                 if w not in self.S:
                     return False
         return True
 
-    def check_lambda_lists(self) -> bool:
+    def check_lambda(self) -> bool:
         r"""Check that each :math:`\Lambda(u)` equals :math:`N_G(u) \cap (B \cup U)`.
 
         The cached list must agree with the current graph state; stale
@@ -237,7 +237,7 @@ class System:
                 return False
         return True
 
-    def check_L_lists(self) -> bool:
+    def check_L(self) -> bool:
         r"""Check that each :math:`L(a)` equals :math:`N_G(a) \cap U`.
 
         Symmetric to :meth:`check_lambda_lists` but for :math:`A`-vertices.
@@ -255,7 +255,7 @@ class System:
                 return False
         return True
 
-    def check_all_invariants(self) -> bool:
+    def check(self) -> bool:
         """Return ``True`` iff every invariant of the :math:`z`-system holds.
 
         Equivalent to a logical AND of:
@@ -273,15 +273,15 @@ class System:
             :math:`O(n + m)`.
         """
         return (
-            self.check_degree_bounds()
-            and self.check_U_degree_in_U()
-            and self.check_P1()
-            and self.check_P2()
-            and self.check_lambda_lists()
-            and self.check_L_lists()
+            self.check_bound()
+            and self.check_u()
+            and self.check_p1()
+            and self.check_p2()
+            and self.check_lambda()
+            and self.check_L()
         )
 
-    def build_lambda_and_L(self) -> None:
+    def index(self) -> None:
         r"""Recompute :math:`\Lambda(u)` and :math:`L(a)` from the current graph.
 
         Call this whenever the host graph has been mutated so that the
@@ -300,7 +300,7 @@ class System:
             a: sorted(w for w in self.graph.neighbors(a) if w in self.U) for a in self.A
         }
 
-    def is_maximal_matching(self, matching: Matching) -> bool:
+    def maximal(self, matching: Matching) -> bool:
         """Return ``True`` iff ``matching`` is maximal in the current ``graph``.
 
         Convenience wrapper around the global helper; lives here so tests
@@ -625,7 +625,7 @@ def build_z_system(graph: Graph, z: int) -> System:
             A.add(v)
 
     system = System(graph=graph, z=z, A=A, B=B, U=U_set, M=M)
-    system.build_lambda_and_L()
+    system.index()
 
     # --- Step 2: iteratively promote U-vertices to B.  We keep looping
     # until one full pass through U makes no further changes; the
@@ -639,5 +639,5 @@ def build_z_system(graph: Graph, z: int) -> System:
                 changed = True
 
     system.M = M
-    system.build_lambda_and_L()
+    system.index()
     return system

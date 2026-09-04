@@ -63,7 +63,7 @@ def visualize_system(system: System, width: int = 60) -> str:
 
     lines.append("\nDEGREES IN M:")
     for v in range(system.graph.n):
-        deg = system.degree_in_M(v)
+        deg = system.degree(v)
         partition = "A" if v in system.A else ("B" if v in system.B else "U")
         bar = "█" * deg
         lines.append(f"  v{v:3d} [{partition}] deg={deg:2d} {bar}")
@@ -86,13 +86,13 @@ def visualize_system(system: System, width: int = 60) -> str:
             lines.append(f"  L({a}) = {neighbors}")
 
     lines.append("\nINVARIANT CHECKS:")
-    lines.append(f"  Degree bounds:   {'✓' if system.check_degree_bounds() else '✗'}")
-    lines.append(f"  U-U degree:      {'✓' if system.check_U_degree_in_U() else '✗'}")
-    lines.append(f"  P1 (|N(u)∩B|≤2z): {'✓' if system.check_P1() else '✗'}")
-    lines.append(f"  P2 (A→S in M):   {'✓' if system.check_P2() else '✗'}")
-    lines.append(f"  Λ lists:         {'✓' if system.check_lambda_lists() else '✗'}")
-    lines.append(f"  L lists:         {'✓' if system.check_L_lists() else '✗'}")
-    lines.append(f"  ALL INVARIANTS:  {'✓' if system.check_all_invariants() else '✗'}")
+    lines.append(f"  Degree bounds:   {'✓' if system.check_bound() else '✗'}")
+    lines.append(f"  U-U degree:      {'✓' if system.check_u() else '✗'}")
+    lines.append(f"  P1 (|N(u)∩B|≤2z): {'✓' if system.check_p1() else '✗'}")
+    lines.append(f"  P2 (A→S in M):   {'✓' if system.check_p2() else '✗'}")
+    lines.append(f"  Λ lists:         {'✓' if system.check_lambda() else '✗'}")
+    lines.append(f"  L lists:         {'✓' if system.check_L() else '✗'}")
+    lines.append(f"  ALL INVARIANTS:  {'✓' if system.check() else '✗'}")
 
     lines.append(separator)
     return "\n".join(lines)
