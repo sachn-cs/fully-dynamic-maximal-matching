@@ -49,6 +49,7 @@ from axiom.types import (
     canonical,
 )
 from axiom.hierarchy import Hierarchy
+from axiom.rebuild import Rebuild, from_mode
 from axiom.system import System, build
 
 
@@ -114,11 +115,14 @@ class Matcher:
         mode: str = "basic",
         graph: Graph | None = None,
         colorer: Colorer | None = None,
+        policy: Rebuild | None = None,
     ) -> None:
         if n < 0:
             raise ValueError(f"n must be non-negative, got {n}")
-        if mode not in {"basic", "multilevel"}:
-            raise ValueError(f"mode must be 'basic' or 'multilevel', got {mode}")
+        if mode not in {"basic", "tiered", "multilevel"}:
+            raise ValueError(
+                f"mode must be 'basic', 'tiered', or 'multilevel', got {mode}"
+            )
         self.n = n
         self.mode = mode
         self.graph = graph if graph is not None else Adjacency(n)
@@ -142,73 +146,13 @@ class Matcher:
 
         self.accountant = Ledger()
 
-        if mode == "basic":
-            self.__init_basic()
-        else:
-            self.__init_multilevel()
+        if policy is None:
+            policy = from_mode(mode)
+        self.policy = policy
+        self.policy.configure(self)
+        self.policy.rebuild(self)
 
-    def __init_basic(self) -> None:
-        self.z = math.ceil(self.n ** (2.0 / 3.0)) if self.n > 0 else 1
-        self.phase_length = math.ceil(self.n ** (4.0 / 3.0)) if self.n > 0 else 1
-        self.subphase_length = max(1, self.phase_length // self.z)
-        self.__rebuild_basic()
-
-    def __init_multilevel(self) -> None:
-        if self.n <= 1:
-            self.k = 1
-            self.level_zs = [1]
-        else:
-            z = self.n
-            zs: list[int] = []
-            while z >= math.isqrt(self.n):
-                zs.append(z)
-                z = max(1, z // 2)
-            self.level_zs = zs
-            self.k = len(zs)
-        self.phase_length = math.ceil(self.n ** (4.0 / 3.0)) if self.n > 0 else 1
-        self.subphase_length = max(1, self.phase_length // self.z) if self.z > 0 else 1
-        self.__rebuild_multilevel()
-
-    def __rebuild_basic(self) -> None:
-        self.system = build(self.graph, self.z)
-        self.__partition_m_into_matchings()
-        self.__rebuild_matching()
-        self.update_count = 0
-        self.subphase_count = 0
-        self.accountant.record_phase_rebuild()
-
-    def __rebuild_multilevel(self) -> None:
-        self.multi = Hierarchy(graph=self.graph, k=self.k)
-        self.multi.levels = []
-        for z in self.level_zs:
-            level = build(self.graph, z)
-            self.multi.levels.append(level)
-
-        if self.multi.levels:
-            level1 = self.multi.levels[0]
-            sorted_a = sorted(level1.A)
-            split = len(sorted_a) // 2
-            self.multi.A1 = set(sorted_a[:split])
-            self.multi.A2 = set(sorted_a[split:])
-            self.multi.N1 = self.multi.A2 | level1.B
-            self.multi.R1 = set(range(self.graph.n)) - (self.multi.A1 | self.multi.N1)
-
-        if self.multi.levels:
-            self.system = self.multi.levels[-1]
-            self.z = self.level_zs[-1]
-            self.subphase_length = max(1, self.phase_length // self.z)
-            self.__partition_m_into_matchings()
-        else:
-            self.system = None
-            self.seed_matching = set()
-            self.matchings = []
-
-        self.__rebuild_matching()
-        self.update_count = 0
-        self.subphase_count = 0
-        self.accountant.record_phase_rebuild()
-
-    def __partition_m_into_matchings(self) -> None:
+    def partition(self) -> None:
         if self.system is None:
             self.seed_matching = set()
             self.matchings = []
@@ -271,7 +215,7 @@ class Matcher:
         self.partners.pop(u, None)
         self.partners.pop(v, None)
 
-    def __rebuild_matching(self) -> None:
+    def refresh(self) -> None:
         if self.system is None:
             self.matched_edges = greedy(self.graph)
             self.matched_vertices = {v for e in self.matched_edges for v in e}
@@ -416,7 +360,7 @@ class Matcher:
                     else:
                         self.accountant.record_greedy_rebuild()
 
-        self.__rebuild_matching()
+        self.refresh()
         self.accountant.record_insertion()
 
     def __handle_deletion(self, u: Vertex, v: Vertex) -> None:
@@ -429,7 +373,7 @@ class Matcher:
         self.__cleanup_stale_edges()
 
         if not self.maximal():
-            self.__rebuild_matching()
+            self.refresh()
 
         self.accountant.record_deletion()
 
@@ -560,10 +504,7 @@ class Matcher:
         self.__check_subphase_boundary()
 
         if self.update_count >= self.phase_length:
-            if self.mode == "basic":
-                self.__rebuild_basic()
-            else:
-                self.__rebuild_multilevel()
+            self.policy.rebuild(self)
 
     def matching(self) -> Matching:
         """Return a copy of the current maximal matching.
