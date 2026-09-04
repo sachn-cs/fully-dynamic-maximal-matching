@@ -5,12 +5,12 @@ r"""Deterministic edge-coloring routines.
 ABB+26 algorithm is not provided in the paper excerpt.  This module provides
 two implementations:
 
-1. ``abb_edge_color`` -- a fast greedy colouring with conflict resolution
+1. ``GreedyColorer`` -- a fast greedy colouring with conflict resolution
    that runs in :math:`O(m \cdot \Delta)` worst case but is significantly
    faster in practice than the classical Vizing alternating-path approach.
    Uses degree-ordered processing and colour-class maintenance for efficiency.
 
-2. ``vizing_edge_color`` -- the original Vizing alternating-path recolouring
+2. ``VizingColorer`` -- the original Vizing alternating-path recolouring
    with backtracking fallback.  Correct and uses at most :math:`\Delta+1`
    colours but slower.
 
@@ -31,15 +31,14 @@ Mathematical background:
 
 Limitations:
     * The :math:`O(m^{1+o(1)})` bound of Theorem 2.4 is **not** met here.
-      ``abb_edge_color`` is :math:`O(m \cdot \Delta)` worst case and
-      ``vizing_edge_color`` is :math:`O(m \cdot \Delta)` plus an
+      ``GreedyColorer`` is :math:`O(m \cdot \Delta)` worst case and
+      ``VizingColorer`` is :math:`O(m \cdot \Delta)` plus an
       exponential backtracking fallback for stubborn instances.
 """
 
 from __future__ import annotations
 
-from fdmm.graph import DynamicGraph
-from fdmm.types import Color, Coloring, Edge, Vertex, canonical_edge
+from maxmatch.types import Color, Coloring, Edge, Graph, Vertex, canonical_edge
 
 
 class VizingColoringError(RuntimeError):
@@ -54,8 +53,8 @@ class VizingColoringError(RuntimeError):
     """
 
 
-def abb_edge_color(graph: DynamicGraph, delta: int) -> Coloring:
-    r"""Fast greedy edge-colouring using degree-ordered processing.
+class GreedyColorer:
+    """Fast greedy edge-coloring using degree-ordered processing.
 
     This approximates the ABB+26 approach by processing edges in a
     structured order and maintaining colour classes for efficient conflict
@@ -69,99 +68,140 @@ def abb_edge_color(graph: DynamicGraph, delta: int) -> Coloring:
         3. For each edge ``(u, v)`` find the smallest ``c`` not used at
            either endpoint; assign it.
         4. If no such ``c`` exists, call
-           :func:`recolour_for_edge` to attempt a short alternating-path
+           :func:`recolor_for_edge` to attempt a short alternating-path
            recolour; on failure escalate to the full Vizing argument and
            finally to backtracking for the whole graph.
-
-    Args:
-        graph: The graph to colour.
-        delta: An upper bound on the maximum degree.
-
-    Returns:
-        A dictionary mapping each canonical edge to its colour.
-
-    Complexity:
-        Worst-case :math:`O(m \cdot \Delta)` because of the recolouring
-        attempts.  Empirically much faster on sparse graphs.
     """
-    max_colors = delta + 1
-    coloring: Coloring = {}
 
-    # Trivial case avoids building per-vertex scratch state on empty input.
-    if graph.num_edges() == 0:
+    def color(self, graph: Graph, delta: int) -> Coloring:
+        r"""Return a proper edge coloring of the graph.
+
+        Args:
+            graph: The graph to color.
+            delta: An upper bound on the maximum degree.
+
+        Returns:
+            A dictionary mapping each canonical edge to its colour.
+
+        Complexity:
+            Worst-case :math:`O(m \cdot \Delta)` because of the recolouring
+            attempts.  Empirically much faster on sparse graphs.
+        """
+        max_colors = delta + 1
+        coloring: Coloring = {}
+
+        if graph.num_edges() == 0:
+            return coloring
+
+        vertex_colors: list[set[Color]] = [set() for _ in range(graph.n)]
+
+        edges = sorted(
+            graph.edges(),
+            key=lambda e: -(graph.degree(e[0]) + graph.degree(e[1])),
+        )
+
+        for u, v in edges:
+            e = canonical_edge(u, v)
+            used_u = vertex_colors[u]
+            used_v = vertex_colors[v]
+
+            assigned = False
+            for c in range(max_colors):
+                if c not in used_u and c not in used_v:
+                    coloring[e] = c
+                    used_u.add(c)
+                    used_v.add(c)
+                    assigned = True
+                    break
+
+            if assigned:
+                continue
+
+            success = recolor_for_edge(graph, coloring, vertex_colors, u, v, max_colors)
+            if not success:
+                try:
+                    color_single_edge(graph, u, v, coloring, max_colors)
+                    vertex_colors[u].add(coloring[e])
+                    vertex_colors[v].add(coloring[e])
+                except VizingColoringError:
+                    coloring.clear()
+                    for vc in vertex_colors:
+                        vc.clear()
+                    if not backtrack_color(
+                        graph, sorted(graph.edges()), 0, coloring, max_colors
+                    ):
+                        max_deg = (
+                            max(graph.degree(v_) for v_ in range(graph.n))
+                            if graph.n
+                            else 0
+                        )
+                        raise RuntimeError(
+                            f"Unable to color graph with {max_colors} colours "
+                            f"(delta={delta}, max_degree={max_deg})."
+                        )
+                    for vc in vertex_colors:
+                        vc.clear()
+                    for (a, b), c in coloring.items():
+                        vertex_colors[a].add(c)
+                        vertex_colors[b].add(c)
+                    return coloring
+
         return coloring
 
-    # Per-vertex set of colours already used at that vertex.  Maintained
-    # alongside ``coloring`` so the inner loop can skip forbidden colours
-    # in O(1) per candidate.
-    vertex_colors: list[set[Color]] = [set() for _ in range(graph.n)]
 
-    # Process high-degree-sum edges first: a vertex with many incident
-    # edges is more constrained, so settling its colours early prevents
-    # later edges from being unable to find a free colour.
-    edges = sorted(
-        graph.edges(),
-        key=lambda e: -(graph.degree(e[0]) + graph.degree(e[1])),
-    )
+class VizingColorer:
+    """Vizing alternating-path edge-coloring with backtracking fallback.
 
-    for u, v in edges:
-        e = canonical_edge(u, v)
-        used_u = vertex_colors[u]
-        used_v = vertex_colors[v]
+    The primary algorithm processes edges one by one using the standard
+    constructive proof of Vizing's theorem (alternating-path flips).  For
+    small or dense graphs where the greedy flip argument may hit corner cases,
+    a backtracking fallback guarantees correctness.
+    """
 
-        # Greedy assignment: scan the colour palette left-to-right and
-        # take the first colour missing at both endpoints.
-        assigned = False
-        for c in range(max_colors):
-            if c not in used_u and c not in used_v:
-                coloring[e] = c
-                used_u.add(c)
-                used_v.add(c)
-                assigned = True
-                break
+    def color(self, graph: Graph, delta: int) -> Coloring:
+        r"""Return a proper edge coloring of the graph.
 
-        if assigned:
-            continue
+        Args:
+            graph: The graph to color.
+            delta: An upper bound on the maximum degree of the graph.
+                   The algorithm uses the colour set ``{0, ..., delta}``.
 
-        # All colours used by both endpoints -- attempt a short recolour.
-        success = recolour_for_edge(graph, coloring, vertex_colors, u, v, max_colors)
-        if not success:
-            # Escalate to the classical Vizing alternating-path argument.
-            try:
+        Returns:
+            A dictionary mapping each canonical edge to its colour.
+
+        Raises:
+            RuntimeError: If both the Vizing and backtracking strategies fail.
+                          This should not happen for a simple graph when
+                          ``delta >= max_degree``.
+
+        Complexity:
+            Worst-case :math:`O(m \cdot \Delta)` for the alternating-path
+            phase, plus the exponential backtracking search if needed.
+        """
+        max_colors = delta + 1
+        coloring: Coloring = {}
+
+        edges = sorted(graph.edges())
+
+        try:
+            for u, v in edges:
                 color_single_edge(graph, u, v, coloring, max_colors)
-                vertex_colors[u].add(coloring[e])
-                vertex_colors[v].add(coloring[e])
-            except VizingColoringError:
-                # The Vizing argument exhausted both recolouring paths.
-                # Fall back to an exponential search over the whole
-                # graph; if that also fails, the input is impossible.
-                coloring.clear()
-                for vc in vertex_colors:
-                    vc.clear()
-                if not backtrack_color(
-                    graph, sorted(graph.edges()), 0, coloring, max_colors
-                ):
-                    max_deg = (
-                        max(graph.degree(v_) for v_ in range(graph.n)) if graph.n else 0
-                    )
-                    raise RuntimeError(
-                        f"Unable to color graph with {max_colors} colours "
-                        f"(delta={delta}, max_degree={max_deg})."
-                    )
-                # Rebuild vertex_colors from the complete coloring so
-                # callers see consistent state.
-                for vc in vertex_colors:
-                    vc.clear()
-                for (a, b), c in coloring.items():
-                    vertex_colors[a].add(c)
-                    vertex_colors[b].add(c)
-                return coloring
-
-    return coloring
+            return coloring
+        except VizingColoringError:
+            coloring.clear()
+            if not backtrack_color(graph, edges, 0, coloring, max_colors):
+                max_deg = (
+                    max(graph.degree(v) for v in range(graph.n)) if graph.n else 0
+                )
+                raise RuntimeError(
+                    f"Unable to color graph with {max_colors} colours "
+                    f"(delta={delta}, max_degree={max_deg})."
+                )
+            return coloring
 
 
-def recolour_for_edge(
-    graph: DynamicGraph,
+def recolor_for_edge(
+    graph: Graph,
     coloring: Coloring,
     vertex_colors: list[set[Color]],
     u: Vertex,
@@ -195,34 +235,24 @@ def recolour_for_edge(
     used_v = vertex_colors[v]
 
     for c1 in range(max_colors):
-        # Search for a colour that is the bottleneck: missing at ``u``
-        # but used at ``v``.  Only such colours block assignment to
-        # ``(u, v)``.
         if c1 not in used_u and c1 in used_v:
-            # Locate the unique edge of colour c1 at v.  Multiple
-            # candidates indicate the recolouring has already failed
-            # for this colour, so we skip them.
             e_v = find_edge_of_color(graph, coloring, v, c1)
             if e_v is None:
                 continue
             w = e_v[0] if e_v[1] == v else e_v[1]
 
-            # Look for a replacement colour c2 missing at both v and w
-            # so that we can shift (v, w) and reuse c1 for (u, v).
             for c2 in range(max_colors):
                 if (
                     c2 != c1
                     and c2 not in vertex_colors[v]
                     and c2 not in vertex_colors[w]
                 ):
-                    # Perform the recolour and the assignment atomically.
                     coloring[e_v] = c2
                     vertex_colors[v].discard(c1)
                     vertex_colors[v].add(c2)
                     vertex_colors[w].discard(c1)
                     vertex_colors[w].add(c2)
 
-                    # Now c1 is free at v -- assign it to (u, v).
                     e_uv = canonical_edge(u, v)
                     coloring[e_uv] = c1
                     used_u.add(c1)
@@ -233,7 +263,7 @@ def recolour_for_edge(
 
 
 def find_edge_of_color(
-    graph: DynamicGraph, coloring: Coloring, v: Vertex, c: Color
+    graph: Graph, coloring: Coloring, v: Vertex, c: Color
 ) -> Edge | None:
     """Find an edge incident to ``v`` with colour ``c``.
 
@@ -247,60 +277,8 @@ def find_edge_of_color(
     return None
 
 
-def vizing_edge_color(graph: DynamicGraph, delta: int) -> Coloring:
-    r"""Return a proper edge coloring of ``graph`` using at most ``delta + 1`` colours.
-
-    The primary algorithm processes edges one by one using the standard
-    constructive proof of Vizing's theorem (alternating-path flips).  For
-    small or dense graphs where the greedy flip argument may hit corner cases,
-    a backtracking fallback guarantees correctness.
-
-    Algorithm (overview):
-        For each edge ``(u, v)`` call :func:`color_single_edge`; if any
-        call raises :class:`VizingColoringError`, fall back to
-        :func:`backtrack_color` over the entire edge list.
-
-    Args:
-        graph: The graph to colour.
-        delta: An upper bound on the maximum degree of ``graph``.
-               The algorithm uses the colour set ``{0, ..., delta}``.
-
-    Returns:
-        A dictionary mapping each canonical edge to its colour.
-
-    Raises:
-        RuntimeError: If both the Vizing and backtracking strategies fail.
-                      This should not happen for a simple graph when
-                      ``delta >= max_degree``.
-
-    Complexity:
-        Worst-case :math:`O(m \cdot \Delta)` for the alternating-path
-        phase, plus the exponential backtracking search if needed.
-    """
-    max_colors = delta + 1
-    coloring: Coloring = {}
-
-    # Deterministic processing order keeps the algorithm reproducible.
-    edges = sorted(graph.edges())
-
-    try:
-        for u, v in edges:
-            color_single_edge(graph, u, v, coloring, max_colors)
-        return coloring
-    except VizingColoringError:
-        # Classical Vizing gave up; restart with exponential search.
-        coloring.clear()
-        if not backtrack_color(graph, edges, 0, coloring, max_colors):
-            max_deg = max(graph.degree(v) for v in range(graph.n)) if graph.n else 0
-            raise RuntimeError(
-                f"Unable to color graph with {max_colors} colours "
-                f"(delta={delta}, max_degree={max_deg})."
-            )
-        return coloring
-
-
 def backtrack_color(
-    graph: DynamicGraph,
+    graph: Graph,
     edges: list[Edge],
     idx: int,
     coloring: Coloring,
@@ -326,7 +304,6 @@ def backtrack_color(
     if idx == len(edges):
         return True
     u, v = edges[idx]
-    # Gather the colours already in use at u and at v.
     used: set[Color] = set()
     for w in graph.neighbors(u):
         e = canonical_edge(u, w)
@@ -336,8 +313,6 @@ def backtrack_color(
         e = canonical_edge(v, w)
         if e in coloring:
             used.add(coloring[e])
-    # Try each colour in turn.  On success the colouring is left populated
-    # for the caller; on failure we backtrack the assignment.
     for c in range(max_colors):
         if c not in used:
             coloring[(u, v)] = c
@@ -348,7 +323,7 @@ def backtrack_color(
 
 
 def missing_colors(
-    graph: DynamicGraph,
+    graph: Graph,
     vertex: Vertex,
     coloring: Coloring,
     max_colors: int,
@@ -377,7 +352,7 @@ def missing_colors(
 
 
 def alternating_path(
-    graph: DynamicGraph,
+    graph: Graph,
     coloring: Coloring,
     start: Vertex,
     color1: Color,
@@ -405,9 +380,6 @@ def alternating_path(
     path: list[Vertex] = [start]
     visited: set[Vertex] = {start}
     current = start
-    # ``next_color`` is the colour the next edge must carry to continue
-    # the alternation.  It starts as ``color2`` because the first edge
-    # out of ``start`` (which lacks ``color1``) must be ``color2``.
     next_color = color2
 
     while True:
@@ -420,7 +392,6 @@ def alternating_path(
                 current = w
                 next_color = color2 if next_color == color1 else color1
                 found = True
-                # Take only the first such neighbour to keep the path simple.
                 break
         if not found:
             break
@@ -455,7 +426,7 @@ def flip_path(
 
 
 def color_single_edge(
-    graph: DynamicGraph,
+    graph: Graph,
     u: Vertex,
     v: Vertex,
     coloring: Coloring,
@@ -499,29 +470,19 @@ def color_single_edge(
 
     common = set(miss_u) & set(miss_v)
     if common:
-        # Case 1: trivial -- a free colour exists at both endpoints.
         coloring[canonical_edge(u, v)] = min(common)
         return
 
-    # Pick any missing colour at u and at v.  ``miss_u[0]`` and
-    # ``miss_v[0]`` are arbitrary but deterministic because
-    # ``missing_colors`` returns colours in ascending order.
     c = miss_u[0]
     d = miss_v[0]
 
     path = alternating_path(graph, coloring, u, c, d)
 
     if v not in path:
-        # Case 2: simple recolour.  Flipping the path frees ``c`` at
-        # the endpoint adjacent to ``v``, and ``(u, v)`` can take ``d``.
         flip_path(coloring, path, c, d)
         coloring[canonical_edge(u, v)] = d
         return
 
-    # Case 3: the first path reaches ``v``; try a second with a
-    # different missing colour at ``u``.  This is the classical
-    # two-path argument and is guaranteed to succeed unless ``u`` is
-    # saturated with fewer than two missing colours.
     if len(miss_u) < 2:
         raise VizingColoringError(
             f"Vertex {u} has degree {graph.degree(u)} but only "

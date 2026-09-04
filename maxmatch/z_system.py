@@ -31,7 +31,7 @@ References:
 
 Assumptions:
     * Vertex labels are dense integers ``0 .. n-1`` (a property inherited
-      from :class:`fdmm.graph.DynamicGraph`).
+      from :class:`maxmatch.graph.Graph`).
     * The system is freshly constructed via :func:`build_z_system`; it is
       the caller's responsibility to maintain :math:`\Lambda` and
       :math:`L` thereafter (or to invoke :meth:`build_lambda_and_L`).
@@ -48,8 +48,7 @@ from collections import deque
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
-from fdmm.graph import DynamicGraph
-from fdmm.types import Edge, Matching, Vertex, canonical_edge
+from maxmatch.types import Edge, Graph, Matching, Vertex, canonical_edge
 
 
 @dataclass
@@ -79,10 +78,10 @@ class ZSubgraphSystem:
 
     Thread-safety:
         Not thread-safe.  A ``ZSubgraphSystem`` should be touched only
-        from the thread that owns the underlying ``DynamicGraph``.
+        from the thread that owns the underlying ``Graph``.
     """
 
-    graph: DynamicGraph
+    graph: Graph
     z: int
     A: set[Vertex] = field(default_factory=set)
     B: set[Vertex] = field(default_factory=set)
@@ -347,7 +346,7 @@ class MultiLevelSystem:
         Not thread-safe.
     """
 
-    graph: DynamicGraph
+    graph: Graph
     k: int
     levels: list[ZSubgraphSystem] = field(default_factory=list)
     A1: set[Vertex] = field(default_factory=set)
@@ -362,7 +361,7 @@ class MultiLevelSystem:
         :math:`R_1`.  The exact constant is not provided in the paper excerpt,
         so this method raises :class:`NotImplementedError` to prevent silent
         false positives.  Callers that need a boolean answer should use
-        :func:`fdmm.invariants.check_multi_level_i3`, which converts the
+        :func:`maxmatch.invariants.check_multi_level_i3`, which converts the
         error into ``False``.
 
         Raises:
@@ -374,7 +373,7 @@ class MultiLevelSystem:
 
 
 def edge_switch_inside_B(
-    graph: DynamicGraph,
+    graph: Graph,
     M: set[Edge],
     deg_M: dict[Vertex, int],
     z: int,
@@ -511,7 +510,7 @@ def edge_switch_inside_B(
 
 
 def promote_u_vertex(
-    graph: DynamicGraph,
+    graph: Graph,
     system: ZSubgraphSystem,
     M: set[Edge],
     deg_M: dict[Vertex, int],
@@ -595,7 +594,7 @@ def promote_u_vertex(
     return False
 
 
-def build_z_system(graph: DynamicGraph, z: int) -> ZSubgraphSystem:
+def build_z_system(graph: Graph, z: int) -> ZSubgraphSystem:
     r"""Build a :math:`z`-subgraph system from scratch.
 
     Implements the two-step deterministic construction from Section 5.2
@@ -687,7 +686,7 @@ def build_z_system(graph: DynamicGraph, z: int) -> ZSubgraphSystem:
 
 
 def build_multi_level_system(
-    graph: DynamicGraph, level_zs: list[int]
+    graph: Graph, level_zs: list[int]
 ) -> MultiLevelSystem:
     r"""Build a multi-level system by stacking independent levels.
 

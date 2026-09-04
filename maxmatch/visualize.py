@@ -1,17 +1,17 @@
-"""Visualisation utilities for the :math:`z`-subgraph system.
+"""Visualization utilities for the z-subgraph system.
 
-This module provides ASCII and text-based visualisation of the
-:math:`z`-subgraph system state, useful for debugging and educational
+This module provides ASCII and text-based visualization of the
+z-subgraph system state, useful for debugging and educational
 purposes.  The output is plain text so it can be redirected to a file,
 emailed, or diffed between runs.
 
 **Engineering utility** -- not part of the paper's baseline algorithm.
 
 Limitations:
-    * All visualisations are designed for ``n <= ~100``; larger inputs
+    * All visualizations are designed for ``n <= ~100``; larger inputs
       produce very long reports.
-    * The visualisations call the heavy invariant checks (e.g.
-      :meth:`ZSubgraphSystem.check_all_invariants`) and therefore have
+    * The visualizations call the heavy invariant checks (e.g.
+      ``ZSubgraphSystem.check_all_invariants``) and therefore have
       ``O(n + m)`` cost on top of any printing.
 """
 
@@ -20,34 +20,33 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from fdmm.dynamic_matching import DynamicMaximalMatching
-    from fdmm.z_system import ZSubgraphSystem
+    from maxmatch.matcher import MaximalMatcher
+    from maxmatch.z_system import ZSubgraphSystem
 
 
-def visualise_system(system: ZSubgraphSystem, width: int = 60) -> str:
-    r"""Return an ASCII representation of the :math:`z`-subgraph system.
+def visualize_system(system: ZSubgraphSystem, width: int = 60) -> str:
+    r"""Return an ASCII representation of the z-subgraph system.
 
     Shows the vertex partition ``(A, B, U)``, edges of ``M``, the
-    per-vertex degree bars, the cached :math:`\Lambda(u)` and
-    :math:`L(a)` lists, and the result of every invariant check.
+    per-vertex degree bars, the cached Lambda and L lists, and the
+    result of every invariant check.
 
     Args:
-        system: The :math:`z`-subgraph system to visualise.
-        width: Maximum line width for the output (used for the
-            horizontal separators and the title banners).
+        system: The z-subgraph system to visualize.
+        width: Maximum line width for the output.
 
     Returns:
-        A multi-line string with the visualisation.
+        A multi-line string with the visualization.
 
     Complexity:
-        :math:`O(n + m)` because every invariant check requires a full
+        O(n + m) because every invariant check requires a full
         pass over the graph.
     """
     lines: list[str] = []
     separator = "=" * width
 
     lines.append(separator)
-    lines.append("Z-SUBGRAPH SYSTEM VISUALISATION")
+    lines.append("Z-SUBGRAPH SYSTEM VISUALIZATION")
     lines.append(separator)
     lines.append(f"  n = {system.graph.n}   z = {system.z}   |M| = {len(system.M)}")
     lines.append(
@@ -56,16 +55,12 @@ def visualise_system(system: ZSubgraphSystem, width: int = 60) -> str:
     )
     lines.append(separator)
 
-    # Vertex partition
     lines.append("\nVERTEX PARTITION:")
     lines.append(f"  A = {sorted(system.A)}")
     lines.append(f"  B = {sorted(system.B)}")
     lines.append(f"  U = {sorted(system.U)}")
     lines.append(f"  S = A ∪ B = {sorted(system.S)}")
 
-    # Degree information -- one row per vertex with a small bar chart
-    # of the M-degree so that saturation in S and free capacity in U
-    # are visible at a glance.
     lines.append("\nDEGREES IN M:")
     for v in range(system.graph.n):
         deg = system.degree_in_M(v)
@@ -73,13 +68,11 @@ def visualise_system(system: ZSubgraphSystem, width: int = 60) -> str:
         bar = "█" * deg
         lines.append(f"  v{v:3d} [{partition}] deg={deg:2d} {bar}")
 
-    # Edges in M
     lines.append(f"\nEDGES IN M ({len(system.M)} edges):")
     for e in sorted(system.M):
         u, v = e
         lines.append(f"  ({u}, {v})")
 
-    # Cached list contents -- surfaces stale-list bugs immediately.
     if system.lambda_lists:
         lines.append("\nΛ(u) LISTS (for u ∈ U):")
         for u in sorted(system.U):
@@ -92,7 +85,6 @@ def visualise_system(system: ZSubgraphSystem, width: int = 60) -> str:
             neighbors = system.L_lists.get(a, [])
             lines.append(f"  L({a}) = {neighbors}")
 
-    # Invariant checks -- one line per invariant plus a combined verdict.
     lines.append("\nINVARIANT CHECKS:")
     lines.append(f"  Degree bounds:   {'✓' if system.check_degree_bounds() else '✗'}")
     lines.append(f"  U-U degree:      {'✓' if system.check_U_degree_in_U() else '✗'}")
@@ -106,61 +98,52 @@ def visualise_system(system: ZSubgraphSystem, width: int = 60) -> str:
     return "\n".join(lines)
 
 
-def visualise_matching(algo: DynamicMaximalMatching, width: int = 60) -> str:
+def visualize_matching(algo: MaximalMatcher, width: int = 60) -> str:
     """Return an ASCII representation of the current matching state.
 
-    Lists every edge in :math:`G` with a star marker on those in
-    :math:`M^*`, the matching itself, every vertex's partner, and the
-    full :meth:`DynamicMaximalMatching.statistics` snapshot.
-
     Args:
-        algo: The dynamic matching algorithm instance.
+        algo: The maximal matcher instance.
         width: Maximum line width (used for separators).
 
     Returns:
-        A multi-line string with the visualisation.
+        A multi-line string with the visualization.
 
     Complexity:
-        :math:`O(n + m + |M^*|)` plus the cost of any invariant
-        re-checks performed by :meth:`DynamicMaximalMatching.is_maximal`.
+        O(n + m + |M*|).
     """
     lines: list[str] = []
     separator = "=" * width
 
     lines.append(separator)
-    lines.append("MATCHING STATE VISUALISATION")
+    lines.append("MATCHING STATE VISUALIZATION")
     lines.append(separator)
     lines.append(f"  n = {algo.n}   mode = {algo.mode}   z = {algo.z}")
     lines.append(
         f"  |E| = {algo.graph.num_edges()}   "
-        f"|M*| = {len(algo.M_star)}   "
+        f"|M*| = {len(algo.matched_edges)}   "
         f"maximal = {algo.is_maximal()}"
     )
     lines.append(f"  updates since rebuild = {algo.update_count}/{algo.phase_length}")
     lines.append(separator)
 
-    # Graph edges
     lines.append("\nGRAPH EDGES:")
     for e in sorted(algo.graph.edges()):
         u, v = e
-        in_matching = e in algo.M_star
+        in_matching = e in algo.matched_edges
         marker = " ★" if in_matching else ""
         lines.append(f"  ({u}, {v}){marker}")
 
-    # Matching edges
-    lines.append(f"\nMATCHING M* ({len(algo.M_star)} edges):")
-    for e in sorted(algo.M_star):
+    lines.append(f"\nMATCHING M* ({len(algo.matched_edges)} edges):")
+    for e in sorted(algo.matched_edges):
         u, v = e
         lines.append(f"  ({u}, {v})")
 
-    # Vertex status
     lines.append("\nVERTEX STATUS:")
     for v in range(algo.n):
-        partner = algo.partner(v)
-        status = f"matched to {partner}" if partner is not None else "unmatched"
+        p = algo.partner(v)
+        status = f"matched to {p}" if p is not None else "unmatched"
         lines.append(f"  v{v:3d}: {status}")
 
-    # Statistics
     stats = algo.statistics()
     lines.append("\nSTATISTICS:")
     for key, value in stats.items():
@@ -170,18 +153,18 @@ def visualise_matching(algo: DynamicMaximalMatching, width: int = 60) -> str:
     return "\n".join(lines)
 
 
-def visualise_graph_adjacency(algo: DynamicMaximalMatching, width: int = 60) -> str:
+def visualize_graph_adjacency(algo: MaximalMatcher, width: int = 60) -> str:
     """Return an ASCII adjacency list representation of the graph.
 
     Args:
-        algo: The dynamic matching algorithm instance.
+        algo: The maximal matcher instance.
         width: Maximum line width (used for separators).
 
     Returns:
         A multi-line string with the adjacency list.
 
     Complexity:
-        :math:`O(n + m)` to enumerate every neighbour.
+        O(n + m) to enumerate every neighbour.
     """
     lines: list[str] = []
     separator = "=" * width

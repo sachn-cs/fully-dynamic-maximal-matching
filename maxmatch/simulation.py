@@ -3,7 +3,7 @@
 These helpers are engineering utilities, not part of the paper's baseline
 algorithm.  They allow reproducible experiments and stress tests by
 producing fixed ``(insert | delete, u, v)`` traces that can be replayed
-against any :class:`DynamicMaximalMatching` instance.
+against any :class:`MaximalMatcher` instance.
 
 Determinism:
     * All randomness is drawn from the caller-supplied :class:`random.Random`
@@ -25,10 +25,10 @@ import random
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
-from fdmm.types import Vertex
+from maxmatch.types import Vertex
 
 if TYPE_CHECKING:
-    from fdmm.dynamic_matching import DynamicMaximalMatching
+    from maxmatch.matcher import MaximalMatcher
 
 Update = tuple[str, Vertex, Vertex]
 """Type of one operation in a simulated trace.
@@ -84,7 +84,7 @@ def random_update_sequence(
         yielded += 1
 
 
-def replay_updates(algo: DynamicMaximalMatching, updates: list[Update]) -> None:
+def replay_updates(algo: MaximalMatcher, updates: list[Update]) -> None:
     """Replay a prepared update sequence on ``algo``.
 
     Args:

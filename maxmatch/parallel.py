@@ -1,14 +1,14 @@
 """Multiprocessing support for parallel update processing.
 
 This module provides utilities for running multiple
-:class:`DynamicMaximalMatching` instances in parallel, useful for
+:class:`MaximalMatcher` instances in parallel, useful for
 benchmarking and comparing the basic and multilevel modes.
 
 **Engineering utility** -- not part of the paper's baseline algorithm.
 
 Process / thread safety:
     * Each worker process builds and tears down its own
-      :class:`DynamicMaximalMatching` instance; nothing is shared
+      :class:`MaximalMatcher` instance; nothing is shared
       across processes.
     * The ``multiprocessing.Pool`` used by :func:`run_parallel_benchmarks`
       forks its workers, so the algorithm must be safe to import
@@ -22,7 +22,7 @@ import multiprocessing
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from fdmm.simulation import random_update_sequence
+from maxmatch.simulation import random_update_sequence
 
 if TYPE_CHECKING:
     pass
@@ -68,9 +68,9 @@ def run_benchmark_worker(
     """
     import time
 
-    from fdmm.dynamic_matching import DynamicMaximalMatching
+    from maxmatch.matcher import MaximalMatcher
 
-    algo = DynamicMaximalMatching(n, mode=mode)
+    algo = MaximalMatcher(n, mode=mode)
     rng = __import__("random").Random(seed)
     seq = list(random_update_sequence(n, updates, rng))
 

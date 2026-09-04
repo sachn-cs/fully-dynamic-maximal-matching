@@ -21,9 +21,8 @@ Mathematical background:
 
 from __future__ import annotations
 
-from fdmm.graph import DynamicGraph
-from fdmm.types import Matching, Vertex
-from fdmm.z_system import MultiLevelSystem, ZSubgraphSystem
+from maxmatch.types import Graph, Matching, Vertex
+from maxmatch.z_system import MultiLevelSystem, ZSubgraphSystem
 
 
 def check_z_system_invariants(system: ZSubgraphSystem) -> bool:
@@ -39,7 +38,7 @@ def check_z_system_invariants(system: ZSubgraphSystem) -> bool:
     return system.check_all_invariants()
 
 
-def check_maximal_matching(graph: DynamicGraph, matching: Matching) -> bool:
+def check_maximal_matching(graph: Graph, matching: Matching) -> bool:
     """Return ``True`` iff ``matching`` is maximal in ``graph``.
 
     A matching is maximal when no edge can be added to it without

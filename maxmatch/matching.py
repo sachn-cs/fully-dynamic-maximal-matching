@@ -11,7 +11,7 @@ Responsibilities:
       scan (used as a baseline and as a fallback when repair fails).
     * Verify maximality in :math:`O(n + m)` by checking every vertex.
     * Provide :math:`O(|M|)` partner lookups and :math:`O(1)` partner
-      maps used by the dynamic update code in :mod:`fdmm.updates`.
+      maps used by the dynamic update code in :mod:`maxmatch.matcher`.
 
 Assumptions:
     * The graph may be empty; every helper tolerates ``n == 0``.
@@ -21,11 +21,10 @@ Assumptions:
 
 from __future__ import annotations
 
-from fdmm.graph import DynamicGraph
-from fdmm.types import Matching, Vertex, canonical_edge
+from maxmatch.types import Graph, Matching, Vertex, canonical_edge
 
 
-def greedy_maximal_matching(graph: DynamicGraph) -> Matching:
+def greedy_maximal_matching(graph: Graph) -> Matching:
     """Return a maximal matching computed by a deterministic greedy scan.
 
     Vertices are processed in increasing order and the first available
@@ -59,7 +58,7 @@ def greedy_maximal_matching(graph: DynamicGraph) -> Matching:
     return matching
 
 
-def is_maximal_matching(graph: DynamicGraph, matching: Matching) -> bool:
+def is_maximal_matching(graph: Graph, matching: Matching) -> bool:
     """Return ``True`` iff ``matching`` is maximal in ``graph``.
 
     A matching is maximal when every vertex is settled: either it is

@@ -43,9 +43,9 @@ class UpdateAccountant:
         subphase_rebuilds: Number of :math:`M_1` augmentations at
             subphase boundaries.
         rematch_u_scans: Cumulative vertex count scanned during
-            :func:`fdmm.updates.rematch_u`.
-        rematch_b_scans: Same, for :func:`fdmm.updates.rematch_b`.
-        rematch_a_scans: Same, for :func:`fdmm.updates.rematch_a`.
+            :func:`maxmatch.matcher.MaximalMatcher.__rematch_u`.
+        rematch_b_scans: Same, for :func:`maxmatch.matcher.MaximalMatcher.__rematch_b`.
+        rematch_a_scans: Same, for :func:`maxmatch.matcher.MaximalMatcher.__rematch_a`.
         greedy_rebuilds: Times the full greedy reconstruction of
             :math:`M^*` was used as a fallback.
         stale_cleanups: Total edges removed from :math:`M^*` because

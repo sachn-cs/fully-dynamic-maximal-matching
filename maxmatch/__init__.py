@@ -1,10 +1,10 @@
-"""FDMM: A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching.
+"""maxmatch: A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching.
 
 This package is a pure-Python reproduction of the deterministic fully
 dynamic maximal matching algorithm of Chuzhoy, Khanna, and Song
 (arXiv:2605.00797v1, STOC 2026).
 
-Two operating modes are exposed through :class:`DynamicMaximalMatching`:
+Two operating modes are exposed through :class:`MaximalMatcher`:
 
 * ``"basic"`` -- :math:`\\tilde O(n^{2/3})` amortised update time via a
   single-level :math:`z`-subgraph system.
@@ -20,14 +20,14 @@ The supporting modules provide:
 * The :math:`z`-system construction primitives
   :func:`build_z_system`, :func:`build_multi_level_system`,
   :func:`edge_switch_inside_B`, and :func:`promote_u_vertex`.
-* The edge colouring utilities :func:`abb_edge_color`,
-  :func:`vizing_edge_color`, :func:`recolour_for_edge`,
+* The edge colouring utilities :class:`GreedyColorer`,
+  :class:`VizingColorer`, :func:`recolor_for_edge`,
   :func:`find_edge_of_color`, :func:`color_single_edge`,
   :func:`alternating_path`, and :func:`flip_path`.
 * :func:`check_maximal_matching` and :func:`check_z_system_invariants`
   -- standalone invariant validators used by the test suite.
-* :class:`UpdateAccountant` and the :mod:`fdmm.simulation` /
-  :mod:`fdmm.parallel` modules -- engineering utilities for empirical
+* :class:`UpdateAccountant` and the :mod:`maxmatch.simulation` /
+  :mod:`maxmatch.parallel` modules -- engineering utilities for empirical
   benchmarking and reproducibility.
 
 Reference:
@@ -35,27 +35,31 @@ Reference:
     Algorithm for Fully Dynamic Maximal Matching*.  arXiv:2605.00797v1.
 """
 
-from fdmm.accounting import UpdateAccountant
-from fdmm.dynamic_matching import DynamicMaximalMatching
-from fdmm.edge_coloring import (
-    abb_edge_color,
+from maxmatch.accounting import UpdateAccountant
+from maxmatch.coloring import (
+    GreedyColorer,
+    VizingColorer,
     alternating_path,
     backtrack_color,
     color_single_edge,
     find_edge_of_color,
     flip_path,
     missing_colors,
-    recolour_for_edge,
-    vizing_edge_color,
+    recolor_for_edge,
 )
-from fdmm.graph import DynamicGraph
-from fdmm.invariants import check_maximal_matching, check_z_system_invariants
-from fdmm.matching import build_partner_map, greedy_maximal_matching, partner_of
-from fdmm.parallel import compare_modes, run_parallel_benchmarks
-from fdmm.simulation import random_update_sequence, replay_updates
-from fdmm.types import Edge, Matching, Vertex, canonical_edge
-from fdmm.visualise import visualise_matching, visualise_system
-from fdmm.z_system import (
+from maxmatch.graph import DynamicGraph
+from maxmatch.invariants import check_maximal_matching, check_z_system_invariants
+from maxmatch.matcher import MaximalMatcher
+from maxmatch.matching import build_partner_map, greedy_maximal_matching, partner_of
+from maxmatch.parallel import compare_modes, run_parallel_benchmarks
+from maxmatch.simulation import random_update_sequence, replay_updates
+from maxmatch.types import Edge, EdgeColorer, Graph, Matching, Vertex, canonical_edge
+from maxmatch.visualize import (
+    visualize_graph_adjacency,
+    visualize_matching,
+    visualize_system,
+)
+from maxmatch.z_system import (
     MultiLevelSystem,
     ZSubgraphSystem,
     build_multi_level_system,
@@ -64,16 +68,20 @@ from fdmm.z_system import (
     promote_u_vertex,
 )
 
-__version__ = "0.4.1"
+__version__ = "0.5.0"
 
 __all__ = [
+    "MaximalMatcher",
     "DynamicGraph",
-    "DynamicMaximalMatching",
+    "GreedyColorer",
+    "VizingColorer",
     "ZSubgraphSystem",
     "MultiLevelSystem",
     "Edge",
     "Matching",
     "Vertex",
+    "Graph",
+    "EdgeColorer",
     "canonical_edge",
     "greedy_maximal_matching",
     "partner_of",
@@ -83,18 +91,17 @@ __all__ = [
     "UpdateAccountant",
     "random_update_sequence",
     "replay_updates",
-    "visualise_system",
-    "visualise_matching",
+    "visualize_system",
+    "visualize_matching",
+    "visualize_graph_adjacency",
     "run_parallel_benchmarks",
     "compare_modes",
-    "abb_edge_color",
-    "vizing_edge_color",
     "backtrack_color",
     "missing_colors",
     "alternating_path",
     "flip_path",
     "color_single_edge",
-    "recolour_for_edge",
+    "recolor_for_edge",
     "find_edge_of_color",
     "build_z_system",
     "build_multi_level_system",

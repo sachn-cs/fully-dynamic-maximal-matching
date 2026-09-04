@@ -1,6 +1,6 @@
 """Command-line interface for the FDMM reproduction.
 
-A thin wrapper around :class:`DynamicMaximalMatching` plus the
+A thin wrapper around :class:`MaximalMatcher` plus the
 :func:`random_update_sequence` generator.  It is useful as a smoke
 test: it runs a fixed number of random updates, asserts maximality
 after each one, and prints timing statistics on exit.
@@ -10,7 +10,7 @@ algorithm.
 
 Example::
 
-    $ fdmm --n 50 --mode basic --updates 1000 --seed 7
+    $ maxmatch --n 50 --mode basic --updates 1000 --seed 7
     Completed 1000 updates in 0.08s
     Final edges: 463
     Matching size: 25
@@ -24,12 +24,12 @@ import random
 import sys
 import time
 
-from fdmm.dynamic_matching import DynamicMaximalMatching
-from fdmm.simulation import random_update_sequence
+from maxmatch.matcher import MaximalMatcher
+from maxmatch.simulation import random_update_sequence
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point for the ``fdmm`` console script.
+    """Entry point for the ``maxmatch`` console script.
 
     Args:
         argv: Optional list of arguments.  When ``None`` (the default)
@@ -55,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     args = parser.parse_args(argv)
 
-    algo = DynamicMaximalMatching(args.n, mode=args.mode)
+    algo = MaximalMatcher(args.n, mode=args.mode)
     rng = random.Random(args.seed)
     updates = list(random_update_sequence(args.n, args.updates, rng))
 

@@ -14,9 +14,9 @@ Responsibilities:
 
 Interactions:
     * Used as the storage layer by the dynamic matcher in
-      :mod:`fdmm.dynamic_matching`.
-    * The greedy matching helpers in :mod:`fdmm.matching` read only.
-    * The :mod:`fdmm.z_system` module reads adjacency when reconstructing
+      :mod:`maxmatch.matcher`.
+    * The greedy matching helpers in :mod:`maxmatch.matching` read only.
+    * The :mod:`maxmatch.z_system` module reads adjacency when reconstructing
       :math:`\Lambda` and :math:`L` lists.
 
 Thread-safety:
@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from fdmm.types import Edge, Vertex
+from maxmatch.types import Edge, Vertex
 
 
 class DynamicGraph:
