@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fdmm"
+name = "maxmatch"
 version = "0.4.1"
 description = "A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching — Python reproduction of arXiv:2605.00797v1."
 readme = "README.md"
@@ -50,11 +50,10 @@ dev = [
 ]
 
 [project.scripts]
-fdmm = "fdmm.cli:main"
+maxmatch = "maxmatch.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
-include = ["fdmm*"]
+include = ["maxmatch*"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -64,7 +63,7 @@ show_error_codes = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["."]
 
 [tool.ruff]
 target-version = "py310"
@@ -83,7 +82,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["fdmm"]
+known-first-party = ["maxmatch"]
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/*.py" = ["E501"]
