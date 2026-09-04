@@ -21,9 +21,9 @@ The supporting modules provide:
   :func:`build_z_system`, :func:`build_hierarchy`,
   :func:`edge_switch_inside_B`, and :func:`promote_u_vertex`.
 * The edge colouring utilities :class:`Greedy`,
-  :class:`Vizing`, :func:`recolor_for_edge`,
-  :func:`find_edge_of_color`, :func:`color_single_edge`,
-  :func:`alternating_path`, and :func:`flip_path`.
+  :class:`Vizing`, :func:`recolor`,
+  :func:`find`, :func:`color_one`,
+  :func:`alternating`, and :func:`flip`.
 * :func:`check_maximal_matching` and :func:`valid`
   -- standalone invariant validators used by the test suite.
 * :class:`Ledger` and the :mod:`axiom.simulation` /
@@ -39,13 +39,13 @@ from axiom.ledger import Ledger
 from axiom.color import (
     Greedy,
     Vizing,
-    alternating_path,
-    backtrack_color,
-    color_single_edge,
-    find_edge_of_color,
-    flip_path,
-    missing_colors,
-    recolor_for_edge,
+    alternating,
+    backtrack,
+    color_one,
+    find,
+    flip,
+    missing,
+    recolor,
 )
 from axiom.graph import Adjacency
 from axiom.invariant import check_maximal_matching, valid
@@ -95,13 +95,13 @@ __all__ = [
     "visualize_graph_adjacency",
     "run_parallel_benchmarks",
     "compare_modes",
-    "backtrack_color",
-    "missing_colors",
-    "alternating_path",
-    "flip_path",
-    "color_single_edge",
-    "recolor_for_edge",
-    "find_edge_of_color",
+    "backtrack",
+    "missing",
+    "alternating",
+    "flip",
+    "color_one",
+    "recolor",
+    "find",
     "build_z_system",
     "build_hierarchy",
     "edge_switch_inside_B",

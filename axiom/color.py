@@ -68,7 +68,7 @@ class Greedy:
         3. For each edge ``(u, v)`` find the smallest ``c`` not used at
            either endpoint; assign it.
         4. If no such ``c`` exists, call
-           :func:`recolor_for_edge` to attempt a short alternating-path
+           :func:`recolor` to attempt a short alternating-path
            recolour; on failure escalate to the full Vizing argument and
            finally to backtracking for the whole graph.
     """
@@ -117,17 +117,17 @@ class Greedy:
             if assigned:
                 continue
 
-            success = recolor_for_edge(graph, coloring, vertex_colors, u, v, max_colors)
+            success = recolor(graph, coloring, vertex_colors, u, v, max_colors)
             if not success:
                 try:
-                    color_single_edge(graph, u, v, coloring, max_colors)
+                    color_one(graph, u, v, coloring, max_colors)
                     vertex_colors[u].add(coloring[e])
                     vertex_colors[v].add(coloring[e])
                 except VizingColoringError:
                     coloring.clear()
                     for vc in vertex_colors:
                         vc.clear()
-                    if not backtrack_color(
+                    if not backtrack(
                         graph, sorted(graph.edges()), 0, coloring, max_colors
                     ):
                         max_deg = (
@@ -185,11 +185,11 @@ class Vizing:
 
         try:
             for u, v in edges:
-                color_single_edge(graph, u, v, coloring, max_colors)
+                color_one(graph, u, v, coloring, max_colors)
             return coloring
         except VizingColoringError:
             coloring.clear()
-            if not backtrack_color(graph, edges, 0, coloring, max_colors):
+            if not backtrack(graph, edges, 0, coloring, max_colors):
                 max_deg = (
                     max(graph.degree(v) for v in range(graph.n)) if graph.n else 0
                 )
@@ -200,7 +200,7 @@ class Vizing:
             return coloring
 
 
-def recolor_for_edge(
+def recolor(
     graph: Graph,
     coloring: Coloring,
     vertex_colors: list[set[Color]],
@@ -218,7 +218,7 @@ def recolor_for_edge(
 
     Searches along an alternating path of length at most 3 from ``u``
     -- this is much faster than the full Vizing alternating path in
-    :func:`alternating_path`.
+    :func:`alternating`.
 
     Args:
         graph: The host graph.
@@ -236,7 +236,7 @@ def recolor_for_edge(
 
     for c1 in range(max_colors):
         if c1 not in used_u and c1 in used_v:
-            e_v = find_edge_of_color(graph, coloring, v, c1)
+            e_v = find(graph, coloring, v, c1)
             if e_v is None:
                 continue
             w = e_v[0] if e_v[1] == v else e_v[1]
@@ -262,7 +262,7 @@ def recolor_for_edge(
     return False
 
 
-def find_edge_of_color(
+def find(
     graph: Graph, coloring: Coloring, v: Vertex, c: Color
 ) -> Edge | None:
     """Find an edge incident to ``v`` with colour ``c``.
@@ -277,7 +277,7 @@ def find_edge_of_color(
     return None
 
 
-def backtrack_color(
+def backtrack(
     graph: Graph,
     edges: list[Edge],
     idx: int,
@@ -316,13 +316,13 @@ def backtrack_color(
     for c in range(max_colors):
         if c not in used:
             coloring[(u, v)] = c
-            if backtrack_color(graph, edges, idx + 1, coloring, max_colors):
+            if backtrack(graph, edges, idx + 1, coloring, max_colors):
                 return True
             del coloring[(u, v)]
     return False
 
 
-def missing_colors(
+def missing(
     graph: Graph,
     vertex: Vertex,
     coloring: Coloring,
@@ -351,7 +351,7 @@ def missing_colors(
     return [c for c in range(max_colors) if c not in used]
 
 
-def alternating_path(
+def alternating(
     graph: Graph,
     coloring: Coloring,
     start: Vertex,
@@ -399,7 +399,7 @@ def alternating_path(
     return path
 
 
-def flip_path(
+def flip(
     coloring: Coloring,
     path: list[Vertex],
     color1: Color,
@@ -425,7 +425,7 @@ def flip_path(
             coloring[e] = color1
 
 
-def color_single_edge(
+def color_one(
     graph: Graph,
     u: Vertex,
     v: Vertex,
@@ -465,8 +465,8 @@ def color_single_edge(
         :math:`O(\Delta)` for each of the up to two alternating paths
         traversed, where ``\Delta`` is the maximum degree.
     """
-    miss_u = missing_colors(graph, u, coloring, max_colors)
-    miss_v = missing_colors(graph, v, coloring, max_colors)
+    miss_u = missing(graph, u, coloring, max_colors)
+    miss_v = missing(graph, v, coloring, max_colors)
 
     common = set(miss_u) & set(miss_v)
     if common:
@@ -476,10 +476,10 @@ def color_single_edge(
     c = miss_u[0]
     d = miss_v[0]
 
-    path = alternating_path(graph, coloring, u, c, d)
+    path = alternating(graph, coloring, u, c, d)
 
     if v not in path:
-        flip_path(coloring, path, c, d)
+        flip(coloring, path, c, d)
         coloring[canonical(u, v)] = d
         return
 
@@ -490,7 +490,7 @@ def color_single_edge(
         )
 
     c_prime = miss_u[1]
-    path2 = alternating_path(graph, coloring, u, c_prime, d)
+    path2 = alternating(graph, coloring, u, c_prime, d)
 
     if v in path2:
         raise VizingColoringError(
@@ -498,5 +498,5 @@ def color_single_edge(
             f"both ({c}, {d}) and ({c_prime}, {d}) alternating paths reach {v}."
         )
 
-    flip_path(coloring, path2, c_prime, d)
+    flip(coloring, path2, c_prime, d)
     coloring[canonical(u, v)] = d
