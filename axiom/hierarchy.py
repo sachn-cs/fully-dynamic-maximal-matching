@@ -27,9 +27,10 @@ References:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from axiom.system import System, build
+from axiom.system import System, build as build_z_system
 from axiom.types import Graph, Vertex
 
 
@@ -98,8 +99,8 @@ class Hierarchy:
         matching: set[tuple[int, int]],
         r: int,
         z: int,
-        partner_of: callable,  # type: ignore[valid-type]
-        rematch: callable,  # type: ignore[valid-type]
+        partner_of: "Callable[[Vertex], Vertex | None]",
+        rematch: "Callable[[Vertex], None]",
     ) -> int:
         """Repair any violation of invariant (I3).
 
@@ -171,7 +172,7 @@ def build_hierarchy(graph: Graph, level_zs: list[int]) -> Hierarchy:
     # Levels are rebuilt independently for clarity, even though the
     # paper describes a recursive refinement.
     for z in level_zs:
-        level = build(graph, z)
+        level = build_z_system(graph, z)
         hierarchy.levels.append(level)
 
     if hierarchy.levels:

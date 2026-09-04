@@ -190,9 +190,7 @@ class Vizing:
         except VizingColoringError:
             coloring.clear()
             if not backtrack(graph, edges, 0, coloring, max_colors):
-                max_deg = (
-                    max(graph.degree(v) for v in range(graph.n)) if graph.n else 0
-                )
+                max_deg = max(graph.degree(v) for v in range(graph.n)) if graph.n else 0
                 raise RuntimeError(
                     f"Unable to color graph with {max_colors} colours "
                     f"(delta={delta}, max_degree={max_deg})."
@@ -262,9 +260,7 @@ def recolor(
     return False
 
 
-def find(
-    graph: Graph, coloring: Coloring, v: Vertex, c: Color
-) -> Edge | None:
+def find(graph: Graph, coloring: Coloring, v: Vertex, c: Color) -> Edge | None:
     """Find an edge incident to ``v`` with colour ``c``.
 
     Returns:

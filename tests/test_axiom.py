@@ -12,15 +12,16 @@ import random
 import pytest
 
 from axiom.color import Vizing
-from axiom.graph import Adjacency
-from axiom.invariant import check_maximal_matching
 from axiom.core import Matcher
-from axiom.matching import partners, greedy, partner_in
-from axiom.simulation import random_updates, replay as replay
-from axiom.types import canonical
+from axiom.graph import Adjacency
 from axiom.hierarchy import Hierarchy
+from axiom.invariant import check_maximal_matching
+from axiom.matching import greedy, partner_in, partners
+from axiom.simulation import random_updates
+from axiom.simulation import replay as replay
 from axiom.system import System, build
-from axiom.visualize import visualize_system, visualize_matching, visualize_adjacency
+from axiom.types import canonical
+from axiom.visualize import visualize_adjacency, visualize_matching, visualize_system
 
 # ------------------------------------------------------------------
 # Graph layer
@@ -797,7 +798,7 @@ class TestMatcher:
             if 0 in e:
                 algo.drop_match(e[0], e[1])
         assert 0 not in algo.matched_vertices
-        assert 0 not in algo.partners
+        assert 0 not in algo.partner_map
         # Inject a stale lambda list that claims 3 is a neighbour of 0.
         algo.system.lambda_lists[0] = [1, 2, 3]
         # Ensure 1 and 2 are already matched so they are skipped.
@@ -959,7 +960,7 @@ class TestRefactor:
             for u in range(n):
                 p = algo.partner(u)
                 if p is None:
-                    assert u not in algo.partners
+                    assert u not in algo.partner_map
                     assert u not in algo.matched_vertices
                 else:
                     assert algo.partner(p) == u

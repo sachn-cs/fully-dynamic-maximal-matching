@@ -16,7 +16,7 @@ Functions:
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 
 from axiom.types import Edge, Vertex, canonical
 
@@ -43,9 +43,9 @@ def flip(coloring: set[Edge], path: list[Vertex]) -> None:
 
 def augment(
     matching: set[Edge],
-    neighbors: Iterable[Vertex],
+    neighbors: "Callable[[Vertex], Iterable[Vertex]]",
     start: Vertex,
-    is_matched: callable,  # type: ignore[valid-type]
+    is_matched: "Callable[[Vertex], bool]",
 ) -> bool:
     """Try to augment ``matching`` by an alternating path starting at ``start``.
 

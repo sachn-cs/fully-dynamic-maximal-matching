@@ -21,9 +21,9 @@ Mathematical background:
 
 from __future__ import annotations
 
-from axiom.types import Graph, Matching, Vertex
 from axiom.hierarchy import Hierarchy
 from axiom.system import System
+from axiom.types import Graph, Matching, Vertex
 
 
 def valid(system: System) -> bool:

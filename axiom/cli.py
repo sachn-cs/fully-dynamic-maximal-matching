@@ -39,7 +39,9 @@ def main(argv: list[str] | None = None) -> int:
         Process exit code: ``0`` on success, ``1`` if maximality was
         violated at any step.
     """
-    parser = argparse.ArgumentParser(description="Axiom fully dynamic maximal matching demo")
+    parser = argparse.ArgumentParser(
+        description="Axiom fully dynamic maximal matching demo"
+    )
     parser.add_argument("--n", type=int, default=20, help="Number of vertices")
     parser.add_argument(
         "--mode",

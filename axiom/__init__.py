@@ -35,7 +35,6 @@ Reference:
     Algorithm for Fully Dynamic Maximal Matching*.  arXiv:2605.00797v1.
 """
 
-from axiom.ledger import Ledger
 from axiom.color import (
     Greedy,
     Vizing,
@@ -47,24 +46,25 @@ from axiom.color import (
     missing,
     recolor,
 )
-from axiom.graph import Adjacency
-from axiom.invariant import check_i3, check_maximal_matching, valid
 from axiom.core import Matcher
-from axiom.matching import partners, greedy, partner_in
+from axiom.graph import Adjacency
+from axiom.hierarchy import Hierarchy, build_hierarchy
+from axiom.invariant import check_i3, check_maximal_matching, valid
+from axiom.ledger import Ledger
+from axiom.matching import greedy, partner_in, partners
 from axiom.parallel import compare, run_parallel
 from axiom.simulation import random_updates, replay
-from axiom.types import Edge, Colorer, Graph, Matching, Vertex, canonical
+from axiom.system import (
+    System,
+    build,
+    promote,
+    switch,
+)
+from axiom.types import Colorer, Edge, Graph, Matching, Vertex, canonical
 from axiom.visualize import (
     visualize_adjacency,
     visualize_matching,
     visualize_system,
-)
-from axiom.hierarchy import Hierarchy, build_hierarchy
-from axiom.system import (
-    System,
-    build,
-    switch,
-    promote,
 )
 
 __version__ = "0.5.0"

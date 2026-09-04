@@ -20,8 +20,8 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Protocol
 
-from axiom.hierarchy import Hierarchy, build_hierarchy
-from axiom.system import System, build
+from axiom.hierarchy import Hierarchy
+from axiom.system import build
 
 if TYPE_CHECKING:
     from axiom.core import Matcher
@@ -118,8 +118,8 @@ class Tiered:
             matcher.multi.A1 = set(sorted_a[:split])
             matcher.multi.A2 = set(sorted_a[split:])
             matcher.multi.N1 = matcher.multi.A2 | level1.B
-            matcher.multi.R1 = (
-                set(range(matcher.graph.n)) - (matcher.multi.A1 | matcher.multi.N1)
+            matcher.multi.R1 = set(range(matcher.graph.n)) - (
+                matcher.multi.A1 | matcher.multi.N1
             )
 
         if matcher.multi.levels:
@@ -148,4 +148,6 @@ def from_mode(mode: str) -> Rebuild:
         return Basic()
     if mode == "tiered" or mode == "multilevel":
         return Tiered()
-    raise ValueError(f"unknown mode: {mode!r} (expected 'basic', 'tiered', or 'multilevel')")
+    raise ValueError(
+        f"unknown mode: {mode!r} (expected 'basic', 'tiered', or 'multilevel')"
+    )

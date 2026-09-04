@@ -329,7 +329,6 @@ class System:
         return True
 
 
-
 def switch(
     graph: Graph,
     M: set[Edge],
@@ -395,7 +394,7 @@ def switch(
                 # must follow an M edge from ``curr`` to a B vertex.
                 for w in graph.neighbors(curr):
                     e = canonical(curr, w)
-                    if e in M and w in graph.adj[curr]:
+                    if e in M and graph.has_edge(curr, w):
                         if (w, 1) not in parent:
                             parent[(w, 1)] = (curr, 0)
                             # Short-circuit: if ``w`` is unsaturated in
