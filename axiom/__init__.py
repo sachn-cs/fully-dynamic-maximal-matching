@@ -24,7 +24,7 @@ The supporting modules provide:
   :class:`Vizing`, :func:`recolor_for_edge`,
   :func:`find_edge_of_color`, :func:`color_single_edge`,
   :func:`alternating_path`, and :func:`flip_path`.
-* :func:`check_maximal_matching` and :func:`check_z_system_invariants`
+* :func:`check_maximal_matching` and :func:`valid`
   -- standalone invariant validators used by the test suite.
 * :class:`Ledger` and the :mod:`axiom.simulation` /
   :mod:`axiom.parallel` modules -- engineering utilities for empirical
@@ -48,7 +48,7 @@ from axiom.color import (
     recolor_for_edge,
 )
 from axiom.graph import DynamicGraph
-from axiom.invariants import check_maximal_matching, check_z_system_invariants
+from axiom.invariant import check_maximal_matching, valid
 from axiom.core import Matcher
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
 from axiom.parallel import compare_modes, run_parallel_benchmarks
@@ -86,7 +86,7 @@ __all__ = [
     "partner_of",
     "build_partner_map",
     "check_maximal_matching",
-    "check_z_system_invariants",
+    "valid",
     "Ledger",
     "random_update_sequence",
     "replay_updates",

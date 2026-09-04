@@ -26,7 +26,7 @@ from axiom.hierarchy import Hierarchy
 from axiom.system import System
 
 
-def check_z_system_invariants(system: System) -> bool:
+def valid(system: System) -> bool:
     """Return ``True`` iff every invariant of ``system`` holds.
 
     Thin wrapper around :meth:`System.check_all_invariants`;

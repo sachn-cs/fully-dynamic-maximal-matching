@@ -39,7 +39,7 @@ from collections import deque
 from axiom.ledger import Ledger
 from axiom.color import Greedy
 from axiom.graph import DynamicGraph
-from axiom.invariants import check_maximal_matching
+from axiom.invariant import check_maximal_matching
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
 from axiom.types import (
     Colorer,

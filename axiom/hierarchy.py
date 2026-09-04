@@ -65,7 +65,7 @@ class Hierarchy:
         :math:`R_1`.  The exact constant is not provided in the paper excerpt,
         so this method raises :class:`NotImplementedError` to prevent silent
         false positives.  Callers that need a boolean answer should use
-        :func:`axiom.invariants.check_multi_level_i3`, which converts the
+        :func:`axiom.invariant.check_multi_level_i3`, which converts the
         error into ``False``.
 
         Raises:

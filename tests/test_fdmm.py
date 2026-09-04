@@ -13,7 +13,7 @@ import pytest
 
 from axiom.color import Vizing
 from axiom.graph import DynamicGraph
-from axiom.invariants import check_maximal_matching
+from axiom.invariant import check_maximal_matching
 from axiom.core import Matcher
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
 from axiom.simulation import random_update_sequence, replay_updates
@@ -855,7 +855,7 @@ class TestHierarchy:
             mls.level_1_invariant_I3()
 
     def test_check_multi_level_i3_returns_false(self) -> None:
-        from axiom.invariants import check_multi_level_i3
+        from axiom.invariant import check_multi_level_i3
 
         g = DynamicGraph(0)
         mls = Hierarchy(graph=g, k=1)
