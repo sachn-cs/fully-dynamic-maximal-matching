@@ -35,12 +35,12 @@ Repository: `https://github.com/sachncs/fully-dynamic-maximal-matching`
   :func:`run_benchmark_worker`).
 - `fdmm.visualise` — ASCII rendering of the :math:`z`-subgraph system
   and matching state.
-- `fdmm.cli` — Command-line entry point.
+- `maxmatch.cli` — Command-line entry point.
 
 ## Quick Start
 
 ```python
-from fdmm import DynamicMaximalMatching
+from maxmatch import DynamicMaximalMatching
 
 algo = DynamicMaximalMatching(n=100, mode="basic")
 algo.insert_edge(0, 1)
