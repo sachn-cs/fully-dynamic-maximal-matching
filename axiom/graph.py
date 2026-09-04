@@ -1,4 +1,4 @@
-r"""Dynamic undirected graph with adjacency sets.
+r"""Adjacency-set graph layer.
 
 **Fidelity note:** The paper states that adjacency lists are stored as binary
 search trees to support :math:`O(\log n)` insertion, deletion, and lookup.
@@ -16,12 +16,12 @@ Interactions:
     * Used as the storage layer by the dynamic matcher in
       :mod:`axiom.core`.
     * The greedy matching helpers in :mod:`axiom.matching` read only.
-    * The :mod:`axiom.z_system` module reads adjacency when reconstructing
-      :math:`\Lambda` and :math:`L` lists.
+    * The :mod:`axiom.system` and :mod:`axiom.hierarchy` modules read
+      adjacency when reconstructing :math:`\Lambda` and :math:`L` lists.
 
 Thread-safety:
-    * Instances are **not** thread-safe.  Each ``DynamicMaximalMatching``
-      owns one ``DynamicGraph`` and is intended to be used from a single
+    * Instances are **not** thread-safe.  Each :class:`axiom.core.Matcher`
+      owns one :class:`Adjacency` and is intended to be used from a single
       thread.  Concurrent access would require external locking.
 """
 
@@ -32,7 +32,7 @@ from collections.abc import Iterator
 from axiom.types import Edge, Vertex
 
 
-class DynamicGraph:
+class Adjacency:
     """A simple undirected graph that supports dynamic edge insertions and deletions.
 
     Vertices are dense integer labels ``0 .. n-1`` fixed at construction.
@@ -103,6 +103,8 @@ class DynamicGraph:
         """Delete an undirected edge ``(u, v)``.
 
         Deleting a non-existent edge is silently ignored unless ``strict`` is ``True``.
+        Self-loops are symmetrically a no-op with :meth:`add_edge`: removed
+        silently under default mode and rejected when ``strict=True``.
 
         Args:
             u: One endpoint.
@@ -110,14 +112,19 @@ class DynamicGraph:
             strict: If ``True``, raise when the edge does not exist.
 
         Raises:
-            ValueError: If either endpoint is out of range, or if ``strict``
-                is ``True`` and the edge does not exist.
+            ValueError: If either endpoint is out of range, if the edge is a
+                self-loop and ``strict`` is ``True``, or if the edge does
+                not exist and ``strict`` is ``True``.
 
         Complexity:
             Amortised :math:`O(1)`; see :meth:`add_edge` for context.
         """
         self.validate_vertex(u)
         self.validate_vertex(v)
+        if u == v:
+            if strict:
+                raise ValueError("Self-loops are not allowed")
+            return
         removed = v in self.adj[u]
         if not removed:
             if strict:
@@ -210,7 +217,7 @@ class DynamicGraph:
         if not (0 <= v < self.n):
             raise ValueError(f"Vertex {v} out of range [0, {self.n})")
 
-    def copy(self) -> DynamicGraph:
+    def copy(self) -> Adjacency:
         """Return a shallow copy of the graph.
 
         The new instance owns fresh adjacency sets; mutating either graph
@@ -219,7 +226,7 @@ class DynamicGraph:
         Complexity:
             :math:`O(n + m)` because every adjacency set must be cloned.
         """
-        g = DynamicGraph(self.n)
+        g = Adjacency(self.n)
         for u in range(self.n):
             g.adj[u] = set(self.adj[u])
         g.edge_count = self.edge_count

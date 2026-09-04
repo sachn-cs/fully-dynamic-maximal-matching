@@ -13,7 +13,7 @@ Two operating modes are exposed through :class:`Matcher`:
 
 The supporting modules provide:
 
-* :class:`DynamicGraph` -- a thin adjacency-set wrapper that stands in
+* :class:`Adjacency` -- a thin adjacency-set wrapper that stands in
   for the paper's BST-based adjacency layer.
 * :class:`System` and :class:`Hierarchy` -- the
   combinatorial state used by both modes.
@@ -47,7 +47,7 @@ from axiom.color import (
     missing_colors,
     recolor_for_edge,
 )
-from axiom.graph import DynamicGraph
+from axiom.graph import Adjacency
 from axiom.invariant import check_maximal_matching, valid
 from axiom.core import Matcher
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
@@ -71,7 +71,7 @@ __version__ = "0.5.0"
 
 __all__ = [
     "Matcher",
-    "DynamicGraph",
+    "Adjacency",
     "Greedy",
     "Vizing",
     "System",

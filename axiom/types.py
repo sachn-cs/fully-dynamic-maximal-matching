@@ -19,11 +19,11 @@ Design notes:
 
 Assumptions:
     * Vertex labels are dense and consecutive starting at ``0``; see
-      :class:`axiom.graph.DynamicGraph` for the corresponding invariant.
+      :class:`axiom.graph.Adjacency` for the corresponding invariant.
 
 Limitations:
     * No support for parallel edges or self-loops.  Callers must filter
-      these out (or rely on :meth:`DynamicGraph.add_edge`) before
+      these out (or rely on :meth:`Adjacency.add_edge`) before
       constructing an :data:`Edge`.
 """
 
@@ -77,7 +77,7 @@ class Graph(Protocol):
     """Protocol defining the interface for graph implementations.
 
     Any graph used by the matching algorithm must implement this protocol.
-    The default implementation is :class:`axiom.graph.DynamicGraph`.
+    The default implementation is :class:`axiom.graph.Adjacency`.
     """
 
     @property

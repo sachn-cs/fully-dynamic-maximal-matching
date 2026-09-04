@@ -12,7 +12,7 @@ import random
 import pytest
 
 from axiom.color import Vizing
-from axiom.graph import DynamicGraph
+from axiom.graph import Adjacency
 from axiom.invariant import check_maximal_matching
 from axiom.core import Matcher
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
@@ -26,17 +26,17 @@ from axiom.system import System, build_z_system
 # ------------------------------------------------------------------
 
 
-class TestDynamicGraph:
-    """Tests for :class:`axiom.graph.DynamicGraph`."""
+class TestAdjacency:
+    """Tests for :class:`axiom.graph.Adjacency`."""
 
     def test_empty_graph(self) -> None:
-        g = DynamicGraph(5)
+        g = Adjacency(5)
         assert g.n == 5
         assert g.num_edges() == 0
         assert g.degree(0) == 0
 
     def test_add_edge(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         assert g.has_edge(0, 1)
         assert g.has_edge(1, 0)
@@ -44,43 +44,43 @@ class TestDynamicGraph:
         assert g.degree(1) == 1
 
     def test_remove_edge(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         g.remove_edge(0, 1)
         assert not g.has_edge(0, 1)
         assert g.degree(0) == 0
 
     def test_duplicate_insert_ignored(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         g.add_edge(0, 1)
         g.add_edge(0, 1)
         assert g.num_edges() == 1
 
     def test_self_loop_ignored(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         g.add_edge(0, 0)
         assert g.num_edges() == 0
 
     def test_neighbors(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         g.add_edge(0, 2)
         assert set(g.neighbors(0)) == {1, 2}
 
     def test_edges_iterator(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         edges = set(g.edges())
         assert edges == {(0, 1), (1, 2)}
 
     def test_invalid_vertex(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         with pytest.raises(ValueError):
             g.degree(5)
 
     def test_copy(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         g.add_edge(0, 1)
         h = g.copy()
         h.remove_edge(0, 1)
@@ -88,19 +88,19 @@ class TestDynamicGraph:
         assert not h.has_edge(0, 1)
 
     def test_single_vertex(self) -> None:
-        g = DynamicGraph(1)
+        g = Adjacency(1)
         g.add_edge(0, 0)
         assert g.num_edges() == 0
         assert list(g.edges()) == []
 
     def test_zero_vertices(self) -> None:
-        g = DynamicGraph(0)
+        g = Adjacency(0)
         assert g.num_edges() == 0
         assert list(g.edges()) == []
 
     def test_complete_graph(self) -> None:
         n = 5
-        g = DynamicGraph(n)
+        g = Adjacency(n)
         for i in range(n):
             for j in range(i + 1, n):
                 g.add_edge(i, j)
@@ -110,7 +110,7 @@ class TestDynamicGraph:
 
     def test_bipartite_graph(self) -> None:
         n, m = 3, 4
-        g = DynamicGraph(n + m)
+        g = Adjacency(n + m)
         for i in range(n):
             for j in range(m):
                 g.add_edge(i, n + j)
@@ -121,19 +121,19 @@ class TestDynamicGraph:
             assert g.degree(n + j) == n
 
     def test_edges_no_duplicates(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         g.add_edge(0, 1)
         g.add_edge(1, 0)
         assert len(list(g.edges())) == 1
 
     def test_remove_nonexistent_edge(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         g.remove_edge(0, 1)
         assert g.num_edges() == 0
 
     def test_large_graph_degree(self) -> None:
         n = 1000
-        g = DynamicGraph(n)
+        g = Adjacency(n)
         for i in range(n - 1):
             g.add_edge(i, i + 1)
         assert g.num_edges() == n - 1
@@ -141,7 +141,7 @@ class TestDynamicGraph:
         assert g.degree(n - 1) == 1
 
     def test_copy_isolation(self) -> None:
-        g = DynamicGraph(5)
+        g = Adjacency(5)
         g.add_edge(0, 1)
         g.add_edge(2, 3)
         h = g.copy()
@@ -150,23 +150,23 @@ class TestDynamicGraph:
         assert h.has_edge(0, 2)
 
     def test_neighbors_on_isolated_vertex(self) -> None:
-        g = DynamicGraph(5)
+        g = Adjacency(5)
         g.add_edge(0, 1)
         assert set(g.neighbors(2)) == set()
 
     def test_strict_self_loop_raises(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         with pytest.raises(ValueError):
             g.add_edge(0, 0, strict=True)
 
     def test_strict_duplicate_raises(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         g.add_edge(0, 1)
         with pytest.raises(ValueError):
             g.add_edge(0, 1, strict=True)
 
     def test_strict_missing_delete_raises(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         with pytest.raises(ValueError):
             g.remove_edge(0, 1, strict=True)
 
@@ -179,7 +179,7 @@ class TestDynamicGraph:
 class TestEdgeColoring:
     """Tests for :mod:`axiom.color`."""
 
-    def _is_proper(self, graph: DynamicGraph, coloring: dict) -> bool:
+    def _is_proper(self, graph: Adjacency, coloring: dict) -> bool:
         for u in range(graph.n):
             seen: set[int] = set()
             for v in graph.neighbors(u):
@@ -191,7 +191,7 @@ class TestEdgeColoring:
         return True
 
     def test_triangle(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         g.add_edge(2, 0)
@@ -200,7 +200,7 @@ class TestEdgeColoring:
         assert self._is_proper(g, coloring)
 
     def test_star(self) -> None:
-        g = DynamicGraph(5)
+        g = Adjacency(5)
         for i in range(1, 5):
             g.add_edge(0, i)
         coloring = Vizing().color(g, 4)
@@ -208,7 +208,7 @@ class TestEdgeColoring:
         assert self._is_proper(g, coloring)
 
     def test_path(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         g.add_edge(2, 3)
@@ -217,12 +217,12 @@ class TestEdgeColoring:
         assert self._is_proper(g, coloring)
 
     def test_empty_graph(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         coloring = Vizing().color(g, 0)
         assert coloring == {}
 
     def test_cycle(self) -> None:
-        g = DynamicGraph(5)
+        g = Adjacency(5)
         for i in range(5):
             g.add_edge(i, (i + 1) % 5)
         coloring = Vizing().color(g, 2)
@@ -231,7 +231,7 @@ class TestEdgeColoring:
 
     def test_complete_graph_odd(self) -> None:
         n = 5
-        g = DynamicGraph(n)
+        g = Adjacency(n)
         for i in range(n):
             for j in range(i + 1, n):
                 g.add_edge(i, j)
@@ -241,7 +241,7 @@ class TestEdgeColoring:
 
     def test_complete_graph_even(self) -> None:
         n = 6
-        g = DynamicGraph(n)
+        g = Adjacency(n)
         for i in range(n):
             for j in range(i + 1, n):
                 g.add_edge(i, j)
@@ -250,7 +250,7 @@ class TestEdgeColoring:
         assert self._is_proper(g, coloring)
 
     def test_disconnected_components(self) -> None:
-        g = DynamicGraph(6)
+        g = Adjacency(6)
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         g.add_edge(2, 0)
@@ -262,14 +262,14 @@ class TestEdgeColoring:
         assert self._is_proper(g, coloring)
 
     def test_single_edge(self) -> None:
-        g = DynamicGraph(2)
+        g = Adjacency(2)
         g.add_edge(0, 1)
         coloring = Vizing().color(g, 1)
         assert len(set(coloring.values())) == 1
         assert self._is_proper(g, coloring)
 
     def test_two_parallel_paths(self) -> None:
-        g = DynamicGraph(6)
+        g = Adjacency(6)
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         g.add_edge(3, 4)
@@ -279,7 +279,7 @@ class TestEdgeColoring:
         assert self._is_proper(g, coloring)
 
     def test_coloring_all_edges_present(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         g.add_edge(0, 2)
         g.add_edge(1, 2)
@@ -298,7 +298,7 @@ class TestMatchingHelpers:
     """Tests for :mod:`axiom.matching`."""
 
     def test_greedy_maximal_matching(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         g.add_edge(2, 3)
@@ -306,7 +306,7 @@ class TestMatchingHelpers:
         assert check_maximal_matching(g, m)
 
     def test_greedy_empty_graph(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         m = greedy_maximal_matching(g)
         assert m == set()
 
@@ -331,7 +331,7 @@ class TestSystem:
     """Tests for :class:`axiom.system.System`."""
 
     def test_basic_properties(self) -> None:
-        g = DynamicGraph(6)
+        g = Adjacency(6)
         g.add_edge(0, 1)
         g.add_edge(0, 2)
         g.add_edge(1, 2)
@@ -351,7 +351,7 @@ class TestSystem:
         assert system.check_P2()
 
     def test_lambda_lists(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         g.add_edge(0, 2)
         g.add_edge(0, 3)
@@ -364,7 +364,7 @@ class TestSystem:
         assert set(system.L_lists[3]) == {0}
 
     def test_maximal_matching_check(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         g.add_edge(2, 3)
@@ -373,18 +373,18 @@ class TestSystem:
         assert not system.is_maximal_matching({(0, 1)})
 
     def test_empty_graph_maximal(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         system = System(graph=g, z=1)
         assert system.is_maximal_matching(set())
 
     def test_single_edge_maximal(self) -> None:
-        g = DynamicGraph(2)
+        g = Adjacency(2)
         g.add_edge(0, 1)
         system = System(graph=g, z=1)
         assert system.is_maximal_matching({(0, 1)})
 
     def test_check_degree_bounds_empty(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         system = System(graph=g, z=1)
         system.A = set()
         system.B = set()
@@ -392,7 +392,7 @@ class TestSystem:
         assert system.check_degree_bounds()
 
     def test_P1_violation(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         for i in range(3):
             g.add_edge(3, i)
         system = System(graph=g, z=1)
@@ -402,7 +402,7 @@ class TestSystem:
         assert not system.check_P1()
 
     def test_P2_violation(self) -> None:
-        g = DynamicGraph(3)
+        g = Adjacency(3)
         g.add_edge(0, 2)
         system = System(graph=g, z=1)
         system.A = {0}
@@ -412,19 +412,19 @@ class TestSystem:
         assert not system.check_P2()
 
     def test_all_invariants_on_empty(self) -> None:
-        g = DynamicGraph(0)
+        g = Adjacency(0)
         system = System(graph=g, z=0)
         assert system.check_all_invariants()
 
     def test_degree_in_M_on_unmatched_vertex(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         system = System(graph=g, z=1)
         system.M = {(0, 1)}
         assert system.degree_in_M(2) == 0
 
     def test_neighbors_in_M(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         g.add_edge(0, 2)
         system = System(graph=g, z=2)
@@ -442,13 +442,13 @@ class TestBuildZSystem:
     """Tests for :func:`axiom.system.build_z_system`."""
 
     def test_build_on_empty_graph(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         system = build_z_system(g, z=1)
         assert system.check_degree_bounds()
         assert system.check_U_degree_in_U()
 
     def test_build_on_path(self) -> None:
-        g = DynamicGraph(5)
+        g = Adjacency(5)
         for i in range(4):
             g.add_edge(i, i + 1)
         system = build_z_system(g, z=2)
@@ -457,7 +457,7 @@ class TestBuildZSystem:
 
     def test_build_step_one_partition(self) -> None:
         """Verify that A, B, U are defined from M, not from G-degree."""
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         # star: vertex 0 has degree 3, leaves degree 1
         for i in range(1, 4):
             g.add_edge(0, i)
@@ -473,7 +473,7 @@ class TestBuildZSystem:
         assert 3 in system.U
 
     def test_build_invariants(self) -> None:
-        g = DynamicGraph(10)
+        g = Adjacency(10)
         for i in range(9):
             g.add_edge(i, i + 1)
         system = build_z_system(g, z=2)
@@ -832,13 +832,13 @@ class TestHierarchy:
     """Tests for :class:`axiom.hierarchy.Hierarchy`."""
 
     def test_empty(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         mls = Hierarchy(graph=g, k=2)
         assert mls.k == 2
         assert not mls.levels
 
     def test_with_levels(self) -> None:
-        g = DynamicGraph(4)
+        g = Adjacency(4)
         g.add_edge(0, 1)
         g.add_edge(1, 2)
         mls = Hierarchy(graph=g, k=2)
@@ -849,7 +849,7 @@ class TestHierarchy:
         assert len(mls.levels) == 2
 
     def test_level_1_invariant_I3_empty(self) -> None:
-        g = DynamicGraph(0)
+        g = Adjacency(0)
         mls = Hierarchy(graph=g, k=1)
         with pytest.raises(NotImplementedError):
             mls.level_1_invariant_I3()
@@ -857,7 +857,7 @@ class TestHierarchy:
     def test_check_multi_level_i3_returns_false(self) -> None:
         from axiom.invariant import check_multi_level_i3
 
-        g = DynamicGraph(0)
+        g = Adjacency(0)
         mls = Hierarchy(graph=g, k=1)
         assert check_multi_level_i3(mls) is False
 

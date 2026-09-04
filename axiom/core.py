@@ -6,7 +6,7 @@ Both the basic :math:`\tilde O(n^{2/3})` version and the multi-level
 :math:`n^{1/2+o(1)}` version are provided.
 
 Responsibilities:
-    * Own the live :class:`axiom.graph.DynamicGraph` and the maintained
+    * Own the live :class:`axiom.graph.Adjacency` and the maintained
       maximal matching.
     * Keep an up-to-date :math:`z`-system (or :math:`k`-level system) and
       the auxiliary directed graph :math:`H`.
@@ -38,7 +38,7 @@ from collections import deque
 
 from axiom.ledger import Ledger
 from axiom.color import Greedy
-from axiom.graph import DynamicGraph
+from axiom.graph import Adjacency
 from axiom.invariant import check_maximal_matching
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
 from axiom.types import (
@@ -92,7 +92,7 @@ class Matcher:
     Args:
         n: Number of vertices (fixed for the lifetime of the instance).
         mode: Either ``"basic"`` or ``"multilevel"``.
-        graph: Optional graph implementation (defaults to ``DynamicGraph``).
+        graph: Optional graph implementation (defaults to ``Adjacency``).
         colorer: Optional edge colorer (defaults to ``Greedy``).
 
     Raises:
@@ -121,7 +121,7 @@ class Matcher:
             raise ValueError(f"mode must be 'basic' or 'multilevel', got {mode}")
         self.n = n
         self.mode = mode
-        self.graph = graph if graph is not None else DynamicGraph(n)
+        self.graph = graph if graph is not None else Adjacency(n)
         self.colorer = colorer if colorer is not None else Greedy()
         self.matched_edges: Matching = set()
         self.matched_vertices: set[Vertex] = set()
@@ -214,7 +214,7 @@ class Matcher:
             self.matchings = []
             return
 
-        sub = DynamicGraph(self.n)
+        sub = Adjacency(self.n)
         for e in self.system.M:
             sub.add_edge(e[0], e[1])
 
