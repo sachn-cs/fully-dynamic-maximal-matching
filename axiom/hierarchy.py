@@ -93,6 +93,45 @@ class Hierarchy:
                     return False
         return True
 
+    def maintain_i3(
+        self,
+        matching: set[tuple[int, int]],
+        r: int,
+        z: int,
+        partner_of: callable,  # type: ignore[valid-type]
+        rematch: callable,  # type: ignore[valid-type]
+    ) -> int:
+        """Repair any violation of invariant (I3).
+
+        Iterates over vertices of :math:`A_1` that are currently matched
+        by :math:`M^*` into :math:`R_1`, breaks the offending edge, and
+        calls ``rematch`` to find a new partner for the A_1 endpoint.
+
+        Args:
+            matching: The maintained maximal matching M* (mutated in place).
+            r: The phase length.
+            z: The :math:`z` parameter of the active level-1 system.
+            partner_of: Callable returning the partner of a vertex in M*.
+            rematch: Callable to re-match an unmatched A_1 vertex.
+
+        Returns:
+            The number of A_1 -> R_1 edges broken and rematched.
+        """
+        if z <= 0:
+            return 0
+        tau = (32 * r) // z
+        bound = 2 * tau
+        offenders: list[tuple[int, int]] = []
+        for u, v in matching:
+            if (u in self.A1 and v in self.R1) or (v in self.A1 and u in self.R1):
+                offenders.append((u, v))
+        offenders = offenders[:bound]
+        for u, v in offenders:
+            matching.discard((min(u, v), max(u, v)))
+            rematch(u)
+            rematch(v)
+        return len(offenders)
+
 
 def build_hierarchy(graph: Graph, level_zs: list[int]) -> Hierarchy:
     r"""Build a multi-level system by stacking independent levels.
