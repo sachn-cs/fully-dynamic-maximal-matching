@@ -28,7 +28,7 @@ What actually happened. Include any error messages or tracebacks.
 ## Minimal Reproducible Example
 
 ```python
-from fdmm import DynamicMaximalMatching
+from maxmatch import DynamicMaximalMatching
 
 algo = DynamicMaximalMatching(n=10, mode="basic")
 # Steps to reproduce...
