@@ -86,7 +86,6 @@ class Matcher:
         multi: Multi-level system, present in ``"multilevel"`` mode.
         level_zs: Per-level :math:`z` values in decreasing order.
         k: Number of levels in ``multi``.
-        aux_graph: Outgoing arcs of the directed auxiliary graph :math:`H`.
         accountant: Bookkeeping counters.
 
     Args:
@@ -139,7 +138,6 @@ class Matcher:
         self.level_zs: list[int] = []
         self.k: int = 0
 
-        self.aux_graph: dict[Vertex, set[Vertex]] = {}
         self.accountant = Ledger()
 
         if mode == "basic":
@@ -257,20 +255,6 @@ class Matcher:
 
         self.matched_edges = matching
         self.matched_vertices = matched
-        self.__rebuild_aux_graph()
-
-    def __rebuild_aux_graph(self) -> None:
-        self.aux_graph = {}
-        if self.system is None:
-            return
-        bu = self.system.B | self.system.U
-        for u in bu:
-            if u not in self.matched_vertices:
-                self.aux_graph[u] = set()
-                if u in self.system.U:
-                    for w in self.system.lambda_lists.get(u, []):
-                        if w in bu and w not in self.matched_vertices:
-                            self.aux_graph[u].add(w)
 
     def __check_subphase_boundary(self) -> bool:
         if self.update_count > 0 and self.update_count % self.subphase_length == 0:
@@ -380,7 +364,7 @@ class Matcher:
                     else:
                         self.accountant.record_greedy_rebuild()
 
-        self.__repair_matching()
+        self.__rebuild_matching()
         self.accountant.record_insertion()
 
     def __handle_deletion(self, u: Vertex, v: Vertex) -> None:
@@ -396,9 +380,8 @@ class Matcher:
         self.__cleanup_stale_edges()
 
         if not self.maximal():
-            self.__repair_matching()
+            self.__rebuild_matching()
 
-        self.__rebuild_aux_graph()
         self.accountant.record_deletion()
 
     def __cleanup_stale_edges(self) -> None:
@@ -548,9 +531,6 @@ class Matcher:
                 self.matched_vertices.add(a)
                 self.matched_vertices.add(w)
                 return
-
-    def __repair_matching(self) -> None:
-        self.__rebuild_matching()
 
     def __advance_update_counter(self) -> None:
         self.update_count += 1
