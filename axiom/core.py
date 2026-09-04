@@ -389,13 +389,9 @@ class Matcher:
             u_vert = v if a == u else (u if v in self.system.A else None)
             if a is not None and u_vert is not None and u_vert in self.system.U:
                 if u_vert in self.matched_vertices and a not in self.matched_vertices:
-                    to_remove = None
-                    for x, y in self.matched_edges:
-                        if x == u_vert or y == u_vert:
-                            to_remove = (x, y)
-                            break
-                    if to_remove is not None:
-                        self.drop_match(*to_remove)
+                    partner_of_u = self.partner(u_vert)
+                    if partner_of_u is not None:
+                        self.drop_match(u_vert, partner_of_u)
                         self.add_match(a, u_vert)
                         self.accountant.record_insertion()
                         return
