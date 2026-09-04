@@ -19,11 +19,11 @@ def main() -> None:
 
     # Build a path
     for i in range(n - 1):
-        algo.insert_edge(i, i + 1)
+        algo.insert(i, i + 1)
 
-    print("Matching size:", algo.matching_size())
-    print("Is maximal:", algo.is_maximal())
-    print("Stats:", algo.statistics())
+    print("Matching size:", algo.size())
+    print("Is maximal:", algo.maximal())
+    print("Stats:", algo.stats())
 
 
 if __name__ == "__main__":

@@ -30,13 +30,13 @@ def bench(n: int, mode: str, updates: int, seed: int) -> dict[str, float]:
     start = time.perf_counter()
     for op, u, v in seq:
         if op == "insert":
-            algo.insert_edge(u, v)
+            algo.insert(u, v)
         else:
-            algo.delete_edge(u, v)
+            algo.delete(u, v)
     elapsed = time.perf_counter() - start
 
-    assert algo.is_maximal(), "matching is not maximal after benchmark sequence"
-    stats = algo.statistics()
+    assert algo.maximal(), "matching is not maximal after benchmark sequence"
+    stats = algo.stats()
     return {
         "n": float(n),
         "mode": mode,

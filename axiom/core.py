@@ -100,11 +100,11 @@ class Matcher:
 
     Example:
         >>> algo = Matcher(n=10, mode="basic")
-        >>> algo.insert_edge(0, 1)
-        >>> algo.insert_edge(2, 3)
-        >>> algo.is_maximal()
+        >>> algo.insert(0, 1)
+        >>> algo.insert(2, 3)
+        >>> algo.maximal()
         True
-        >>> sorted(algo.get_matching())
+        >>> sorted(algo.matching())
         [(0, 1), (2, 3)]
     """
 
@@ -328,7 +328,7 @@ class Matcher:
             else:
                 self.seed_matching.add(e)
 
-    def insert_edge(self, u: Vertex, v: Vertex) -> None:
+    def insert(self, u: Vertex, v: Vertex) -> None:
         """Insert edge ``(u, v)`` and repair the maximal matching.
 
         Args:
@@ -339,7 +339,7 @@ class Matcher:
         self.__handle_insertion(u, v)
         self.__advance_update_counter()
 
-    def delete_edge(self, u: Vertex, v: Vertex) -> None:
+    def delete(self, u: Vertex, v: Vertex) -> None:
         """Delete edge ``(u, v)`` and repair the maximal matching.
 
         Args:
@@ -395,7 +395,7 @@ class Matcher:
         self.__rematch_vertex(v)
         self.__cleanup_stale_edges()
 
-        if not self.is_maximal():
+        if not self.maximal():
             self.__repair_matching()
 
         self.__rebuild_aux_graph()
@@ -562,7 +562,7 @@ class Matcher:
             else:
                 self.__rebuild_multilevel()
 
-    def get_matching(self) -> Matching:
+    def matching(self) -> Matching:
         """Return a copy of the current maximal matching.
 
         Returns:
@@ -573,7 +573,7 @@ class Matcher:
         """
         return set(self.matched_edges)
 
-    def is_maximal(self) -> bool:
+    def maximal(self) -> bool:
         """Return True iff the current matching is maximal in the graph.
 
         Complexity:
@@ -581,7 +581,7 @@ class Matcher:
         """
         return check_maximal_matching(self.graph, self.matched_edges)
 
-    def matching_size(self) -> int:
+    def size(self) -> int:
         """Return the number of edges in the current matching."""
         return len(self.matched_edges)
 
@@ -599,7 +599,7 @@ class Matcher:
         """
         return partner_of(self.matched_edges, v)
 
-    def build_partner_map(self) -> dict[Vertex, Vertex]:
+    def partners(self) -> dict[Vertex, Vertex]:
         """Return a dict mapping each matched vertex to its partner.
 
         Returns:
@@ -610,7 +610,7 @@ class Matcher:
         """
         return build_partner_map(self.matched_edges)
 
-    def statistics(self) -> dict[str, int]:
+    def stats(self) -> dict[str, int]:
         """Return a dictionary of runtime statistics.
 
         Returns:

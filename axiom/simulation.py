@@ -100,8 +100,8 @@ def replay_updates(algo: Matcher, updates: list[Update]) -> None:
     """
     for op, u, v in updates:
         if op == "insert":
-            algo.insert_edge(u, v)
+            algo.insert(u, v)
         elif op == "delete":
-            algo.delete_edge(u, v)
+            algo.delete(u, v)
         else:
             raise ValueError(f"Unknown operation: {op}")

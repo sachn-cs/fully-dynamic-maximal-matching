@@ -77,12 +77,12 @@ def run_benchmark_worker(
     start = time.perf_counter()
     for op, u, v in seq:
         if op == "insert":
-            algo.insert_edge(u, v)
+            algo.insert(u, v)
         else:
-            algo.delete_edge(u, v)
+            algo.delete(u, v)
     elapsed = time.perf_counter() - start
 
-    stats = algo.statistics()
+    stats = algo.stats()
     return BenchmarkResult(
         n=n,
         mode=mode,
@@ -90,7 +90,7 @@ def run_benchmark_worker(
         elapsed_sec=elapsed,
         updates_per_sec=updates / elapsed if elapsed > 0 else float("inf"),
         matching_size=stats["matching_size"],
-        is_maximal=algo.is_maximal(),
+        is_maximal=algo.maximal(),
         phase_rebuilds=stats.get("phase_rebuilds", 0),
         subphase_rebuilds=stats.get("subphase_rebuilds", 0),
     )

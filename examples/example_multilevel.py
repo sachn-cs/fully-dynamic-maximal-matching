@@ -22,13 +22,13 @@ def main() -> None:
     updates = list(random_update_sequence(n, 100, rng))
     for op, u, v in updates:
         if op == "insert":
-            algo.insert_edge(u, v)
+            algo.insert(u, v)
         else:
-            algo.delete_edge(u, v)
-        assert algo.is_maximal()
+            algo.delete(u, v)
+        assert algo.maximal()
 
-    print("Matching size:", algo.matching_size())
-    print("Stats:", algo.statistics())
+    print("Matching size:", algo.size())
+    print("Stats:", algo.stats())
 
 
 if __name__ == "__main__":

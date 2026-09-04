@@ -121,7 +121,7 @@ def visualize_matching(algo: Matcher, width: int = 60) -> str:
     lines.append(
         f"  |E| = {algo.graph.num_edges()}   "
         f"|M*| = {len(algo.matched_edges)}   "
-        f"maximal = {algo.is_maximal()}"
+        f"maximal = {algo.maximal()}"
     )
     lines.append(f"  updates since rebuild = {algo.update_count}/{algo.phase_length}")
     lines.append(separator)
@@ -144,7 +144,7 @@ def visualize_matching(algo: Matcher, width: int = 60) -> str:
         status = f"matched to {p}" if p is not None else "unmatched"
         lines.append(f"  v{v:3d}: {status}")
 
-    stats = algo.statistics()
+    stats = algo.stats()
     lines.append("\nSTATISTICS:")
     for key, value in stats.items():
         lines.append(f"  {key}: {value}")

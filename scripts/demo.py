@@ -47,22 +47,22 @@ def run_demo(n: int, mode: str, num_updates: int, seed: int = 42) -> int:
     start = time.perf_counter()
     for op, u, v in updates:
         if op == "insert":
-            algo.insert_edge(u, v)
+            algo.insert(u, v)
         else:
-            algo.delete_edge(u, v)
+            algo.delete(u, v)
 
-        if not algo.is_maximal():
+        if not algo.maximal():
             print(f"ERROR: Matching is not maximal at step {op} ({u},{v})!")
             return 1
 
     elapsed = time.perf_counter() - start
-    stats = algo.statistics()
+    stats = algo.stats()
 
     print(f"Completed {num_updates} updates in {elapsed:.3f}s")
     print(f"Final graph edges: {stats['m']}")
     print(f"Matching size: {stats['matching_size']}")
     print(f"Rebuilds triggered: {stats.get('phase_rebuilds', 0)}")
-    print(f"Maximal: {algo.is_maximal()}")
+    print(f"Maximal: {algo.maximal()}")
     print("\nDemo finished successfully.")
     return 0
 

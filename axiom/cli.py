@@ -62,21 +62,21 @@ def main(argv: list[str] | None = None) -> int:
     start = time.perf_counter()
     for op, u, v in updates:
         if op == "insert":
-            algo.insert_edge(u, v)
+            algo.insert(u, v)
         else:
-            algo.delete_edge(u, v)
-        if not algo.is_maximal():
+            algo.delete(u, v)
+        if not algo.maximal():
             # Maximality is the basic correctness invariant of the
             # algorithm; if it ever fails the reproduction has a bug.
             print(f"ERROR: Matching not maximal after {op} ({u},{v})")
             return 1
     elapsed = time.perf_counter() - start
 
-    stats = algo.statistics()
+    stats = algo.stats()
     print(f"Completed {args.updates} updates in {elapsed:.3f}s")
     print(f"Final edges: {stats['m']}")
     print(f"Matching size: {stats['matching_size']}")
-    print(f"Maximal: {algo.is_maximal()}")
+    print(f"Maximal: {algo.maximal()}")
     return 0
 
 
