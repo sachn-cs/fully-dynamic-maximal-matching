@@ -774,53 +774,53 @@ class TestMatcher:
         assert algo.system is not None
 
     def test_rematch_u_no_phantom_edge_from_stale_list(self) -> None:
-        """Regression: a stale lambda list must not produce a phantom edge."""
-        from axiom.core import Matcher
+        """Regression: a stale lambda list must not produce a phantom edge.
+
+        With the partner dict maintained atomically by add_match/drop_match,
+        a vertex placed back into U without a matching edge has no entry in
+        the partner map. The rematch routine must consult the graph (via
+        graph.has_edge) before adding a candidate edge to the matching,
+        not blindly trust a stale lambda list that mentions a non-edge.
+        """
         from axiom.types import canonical
 
         algo = Matcher(4, mode="basic")
         algo.insert(0, 1)
         algo.insert(0, 2)
-        algo.rebuild_basic()
-        # Place vertex 0 in U and ensure it is unmatched in M_star.
+        algo.policy.rebuild(algo)
+        # Place vertex 0 in U and ensure it is unmatched in M*.
         algo.system.U.add(0)
         algo.system.A.discard(0)
         algo.system.B.discard(0)
         for e in list(algo.matched_edges):
             if 0 in e:
-                algo.matched_edges.discard(e)
-                algo.matched_vertices.discard(e[0])
-                algo.matched_vertices.discard(e[1])
+                algo.drop_match(e[0], e[1])
         assert 0 not in algo.matched_vertices
+        assert 0 not in algo.partners
         # Inject a stale lambda list that claims 3 is a neighbour of 0.
         algo.system.lambda_lists[0] = [1, 2, 3]
         # Ensure 1 and 2 are already matched so they are skipped.
         algo.matched_vertices.add(1)
         algo.matched_vertices.add(2)
         algo._Matcher__rematch_u(0)
-        # Phantom edge (0,3) must not be added.
+        # Phantom edge (0,3) must not be added because (0,3) is not
+        # in the underlying graph.
         assert canonical(0, 3) not in algo.matched_edges
 
-    def test_partition_m_color_range_error(self) -> None:
-        """Regression: out-of-range colors from abb_edge_color must raise."""
-        algo = Matcher(4, mode="basic")
-        algo.insert(0, 1)
-        algo.insert(1, 2)
-        algo.rebuild_basic()
-        # Monkey-patch abb_edge_color to return an invalid color.
-        import axiom.dynamic_matching as dm
+    def test_partition_color_range_error(self) -> None:
+        """Regression: out-of-range colors from a colorer must raise."""
+        from axiom.color import Greedy
 
-        original_color = dm.abb_edge_color
+        algo = Matcher(4, mode="basic", colorer=Greedy())
 
-        def bad_color(graph, delta):
+        def bad_color(graph: object, delta: int) -> dict[tuple[int, int], int]:
             return {(0, 1): 0, (1, 2): delta + 5}
 
-        dm.abb_edge_color = bad_color
-        try:
-            with pytest.raises(RuntimeError):
-                algo.partition_m_into_matchings()
-        finally:
-            dm.abb_edge_color = original_color
+        algo.colorer.color = bad_color  # type: ignore[assignment]
+        algo.insert(0, 1)
+        algo.insert(1, 2)
+        with pytest.raises(RuntimeError):
+            algo.policy.rebuild(algo)
 
 
 # ------------------------------------------------------------------
