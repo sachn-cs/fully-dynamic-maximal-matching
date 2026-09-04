@@ -26,7 +26,7 @@ The supporting modules provide:
   :func:`alternating_path`, and :func:`flip_path`.
 * :func:`check_maximal_matching` and :func:`check_z_system_invariants`
   -- standalone invariant validators used by the test suite.
-* :class:`UpdateAccountant` and the :mod:`axiom.simulation` /
+* :class:`Ledger` and the :mod:`axiom.simulation` /
   :mod:`axiom.parallel` modules -- engineering utilities for empirical
   benchmarking and reproducibility.
 
@@ -35,7 +35,7 @@ Reference:
     Algorithm for Fully Dynamic Maximal Matching*.  arXiv:2605.00797v1.
 """
 
-from axiom.accounting import UpdateAccountant
+from axiom.ledger import Ledger
 from axiom.color import (
     Greedy,
     Vizing,
@@ -87,7 +87,7 @@ __all__ = [
     "build_partner_map",
     "check_maximal_matching",
     "check_z_system_invariants",
-    "UpdateAccountant",
+    "Ledger",
     "random_update_sequence",
     "replay_updates",
     "visualize_system",

@@ -36,7 +36,7 @@ from __future__ import annotations
 import math
 from collections import deque
 
-from axiom.accounting import UpdateAccountant
+from axiom.ledger import Ledger
 from axiom.color import Greedy
 from axiom.graph import DynamicGraph
 from axiom.invariants import check_maximal_matching
@@ -140,7 +140,7 @@ class Matcher:
         self.k: int = 0
 
         self.aux_graph: dict[Vertex, set[Vertex]] = {}
-        self.accountant = UpdateAccountant()
+        self.accountant = Ledger()
 
         if mode == "basic":
             self.__init_basic()

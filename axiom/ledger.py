@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 
 
 @dataclass
-class UpdateAccountant:
+class Ledger:
     """Counters for auditing the cost of dynamic updates.
 
     Every counter starts at zero and increments monotonically.  The
