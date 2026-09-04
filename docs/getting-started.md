@@ -42,7 +42,7 @@ All tests should pass. If any fail, check your Python version and ensure all dep
 ### Basic Mode
 
 ```python
-from fdmm import DynamicMaximalMatching
+from maxmatch import DynamicMaximalMatching
 
 # Create an algorithm instance with 50 vertices
 algo = DynamicMaximalMatching(n=50, mode="basic")
@@ -64,7 +64,7 @@ print("After deletion:", algo.is_maximal())
 ### Multi-Level Mode
 
 ```python
-from fdmm import DynamicMaximalMatching
+from maxmatch import DynamicMaximalMatching
 
 algo = DynamicMaximalMatching(n=50, mode="multilevel")
 
@@ -79,8 +79,8 @@ print("Statistics:", algo.statistics())
 ### Simulation
 
 ```python
-from fdmm import DynamicMaximalMatching
-from fdmm.simulation import random_update_sequence, replay_updates
+from maxmatch import DynamicMaximalMatching
+from maxmatch.simulation import random_update_sequence, replay_updates
 import random
 
 algo = DynamicMaximalMatching(50, mode="basic")
