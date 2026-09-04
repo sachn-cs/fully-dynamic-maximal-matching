@@ -1,6 +1,6 @@
 <p align="center">
-  <h1 align="center">fdmm</h1>
-  <p align="center">A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching — Python reproduction of arXiv:2605.00797v1.</p>
+  <h1 align="center">axiom</h1>
+  <p align="center">A Faster Deterministic Fully Dynamic Maximal Matching Algorithm &mdash; pure-Python reproduction of Chuzhoy, Khanna, and Song (arXiv:2605.00797v1, STOC 2026).</p>
   <p align="center">
     <a href="#installation"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue" alt="Python"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
@@ -11,38 +11,25 @@
   </p>
 </p>
 
-**fdmm** is a Python reproduction of *A Faster Deterministic Algorithm for Fully
-Dynamic Maximal Matching* by Chuzhoy, Khanna, and Song (STOC 2026,
-arXiv:2605.00797v1). It maintains a **maximal matching** in an undirected
-graph under online edge insertions and deletions in amortised
-*Õ(n<sup>1/2+o(1)</sup>)* update time.
+**axiom** is a pure-Python reproduction of *A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching* by Chuzhoy, Khanna, and Song (STOC 2026, [arXiv:2605.00797v1](https://arxiv.org/abs/2605.00797v1)). It maintains a **maximal matching** in an undirected graph under online edge insertions and deletions in amortised &Otilde;(*n*<sup>1/2+o(1)</sup>) update time.
 
 ---
 
 ## Features
 
-- **Two operating modes** — `basic` for the single-level *Õ(n<sup>2/3</sup>)*
-  algorithm and `multilevel` for the *n<sup>1/2+o(1)</sup>* k-level recursive
-  version with `k = Θ(log n)`.
-- **z-subgraph system** — full implementation of the (A, B, U) partition,
-  the `S = A ∪ B` saturation, the `Λ(u)` and `L(a)` index lists, and the six
-  invariants from Section 2 of the paper.
-- **Deterministic edge colouring** — Vizing's classical alternating-path
-  recolouring for `(Δ+1)`-colourings, plus the faster degree-ordered greedy
-  (`abb_edge_color`) used to partition `M` into colour classes.
-- **Comprehensive invariant checks** — independent checkers for maximality
-  and every z-system property, callable from tests or debugging scripts.
-- **Empirical accounting** — explicit counters (`UpdateAccountant`) for the
-  number of rebuilds, rematch scan sizes, stale cleanups, and greedy
-  fallbacks. Useful for diagnosing where time is spent; not a proof of the
-  amortised bound.
-- **Reproducible simulation** — seeded random update sequences with replay
-  utilities for stress tests and benchmarks.
-- **Zero runtime dependencies** — pure Python with the standard library; only
-  the optional `.[dev]` extras (`pytest`, `mypy`, `ruff`, `hypothesis`) are
-  pulled in for development.
-- **Strict type checking** — every public signature is annotated; the
-  repository enables `mypy --strict`.
+- **Two operating modes**
+  - `basic` &mdash; the single-level &Otilde;(*n*<sup>2/3</sup>) algorithm
+  - `tiered` &mdash; the *n*<sup>1/2+o(1)</sup> *k*-level recursive version with *k* = &Theta;(log *n*)
+- **Strategy pattern** &mdash; pick `Basic()` or `Tiered()` explicitly, or use the `mode=` string for backwards compatibility.
+- **z-subgraph system** &mdash; full implementation of the (*A*, *B*, *U*) partition, the *S* = *A* &cup; *B* saturation, the &Lambda;(*u*) and *L*(*a*) index lists, and the seven invariants from Section 2 of the paper.
+- **Multi-level hierarchy** &mdash; Invariant (I3) of the multi-level system is **implemented and maintained** (not stubbed): &le; 2&tau; vertices of *A*<sub>1</sub> may be matched by *M*<sup>*</sup> into *R*<sub>1</sub>, where &tau; = 32 *r* / *z*.
+- **Deterministic edge colouring** &mdash; Vizing's classical alternating-path recolouring for (&Delta;+1)-colourings, plus the faster degree-ordered greedy colourer used to partition *M* into colour classes.
+- **Augmenting-path API** &mdash; `Matcher.augment()`, `Matcher.try_augment()`, `Matcher.flip()` are first-class public methods (no name-mangled privates).
+- **Comprehensive invariant checks** &mdash; independent checkers for maximality, every *z*-system property, and the multi-level (I3) bound; callable from tests or debugging scripts.
+- **Empirical ledger** &mdash; explicit counters for the number of rebuilds, rematch scan sizes, stale cleanups, and greedy fallbacks. Useful for diagnosing where time is spent; **not** a proof of the amortised bound.
+- **Reproducible simulation** &mdash; seeded random update sequences with replay utilities for stress tests and benchmarks.
+- **Zero runtime dependencies** &mdash; pure Python with the standard library; only the optional `.[dev]` extras (`pytest`, `mypy`, `ruff`, `hypothesis`) are pulled in for development.
+- **Strict type checking** &mdash; every public signature is annotated; the repository enables `mypy --strict`.
 
 ---
 
@@ -62,322 +49,257 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
-### In an isolated environment
-
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Linux / macOS
-pip install -e ".[dev]"
-```
-
-**Requirements**: Python >= 3.10
+This pulls in `pytest`, `pytest-cov`, `mypy`, `ruff`, and `hypothesis`.
 
 ---
 
-## Quick Start
+## Quickstart
 
 ### Python API
 
 ```python
-from maxmatch import DynamicMaximalMatching
+from axiom import Matcher
 
 # Initialise on 100 vertices in basic mode
-algo = DynamicMaximalMatching(n=100, mode="basic")
+algo = Matcher(n=100, mode="basic")
 
 # Insert edges
-algo.insert_edge(0, 1)
-algo.insert_edge(2, 3)
+algo.insert(0, 1)
+algo.insert(2, 3)
 
 # Delete edges
-algo.delete_edge(0, 1)
+algo.delete(0, 1)
 
-# Query
-assert algo.is_maximal()
-print("Matching size:", algo.matching_size())
-print("Stats:", algo.statistics())
+# Query the maintained maximal matching
+assert algo.maximal()
+assert algo.size() == 1  # the (2, 3) edge remains
+print(algo.matching())   # {(2, 3)}
+print(algo.partners())   # {2: 3, 3: 2}
+print(algo.stats())      # amortised bookkeeping
 ```
 
-### Command-Line Interface
-
-Run the built-in demo:
+### Command-line interface
 
 ```bash
-fdmm --n 20 --mode basic --updates 200
-fdmm --n 50 --mode multilevel --updates 500
+axiom --n 20 --mode basic --updates 200 --seed 42
 ```
 
-Or call the demo script directly:
+Output:
 
-```bash
-python scripts/demo.py --n 20 --mode basic --updates 200
+```
+=== Axiom Demo: n=20, mode=basic, updates=200 ===
+Completed 200 updates in 0.001s
+Final edges: 12
+Matching size: 8
+Maximal: True
 ```
 
-### Replay a Prepared Sequence
+### Replay a prepared sequence
 
 ```python
-from maxmatch import DynamicMaximalMatching
-from maxmatch.simulation import random_update_sequence, replay_updates
-import random
+from axiom import Matcher
+from axiom.simulation import random_updates, replay
 
-algo = DynamicMaximalMatching(50, mode="basic")
-rng = random.Random(42)
-updates = list(random_update_sequence(50, 200, rng))
-replay_updates(algo, updates)
-assert algo.is_maximal()
-print(algo.statistics())
+algo = Matcher(50, mode="tiered")
+rng = __import__("random").Random(7)
+seq = random_updates(50, 100, rng)
+replay(algo, seq)
+assert algo.maximal()
 ```
 
----
-
-## Configuration
-
-### Update-Counter Reference
-
-`algo.statistics()` returns every counter from `UpdateAccountant`:
-
-| Counter             | Description                                                |
-|---------------------|------------------------------------------------------------|
-| `total_updates`     | Total insert + delete operations                           |
-| `total_insertions`  | Insertions only                                            |
-| `total_deletions`   | Deletions only (including no-op deletes of absent edges)   |
-| `phase_rebuilds`    | Times the z-system was rebuilt from scratch                |
-| `subphase_rebuilds` | Times `M_1` was augmented at a subphase boundary          |
-| `rematch_u_scans`   | Cumulative vertex count scanned during U-rematching        |
-| `rematch_b_scans`   | Same, for B-rematching                                     |
-| `rematch_a_scans`   | Same, for A-rematching                                     |
-| `greedy_rebuilds`   | Fallbacks to full greedy reconstruction of `M*`            |
-| `stale_cleanups`    | Edges removed from `M*` because they had been deleted      |
-
-> These counters are empirical bookkeeping, **not** a proof of the amortised
-> bound. See `docs/audit_report.md` for a per-component fidelity table.
-
-### Mode Schedule
-
-| Mode         | `z`                  | `phase_length`        | Amortised bound          |
-|--------------|----------------------|-----------------------|--------------------------|
-| `basic`      | `⌈n^(2/3)⌉`          | `⌈n^(4/3)⌉`           | `Õ(n^(2/3))`             |
-| `multilevel` | `n, n/2, …, √n`      | `⌈n^(4/3)⌉`           | `n^(1/2+o(1))`           |
-
----
-
-## API Reference
-
-### `DynamicMaximalMatching(n, mode="basic")`
-
-| Method | Description |
-|--------|-------------|
-| `insert_edge(u, v)` | Insert an undirected edge and repair the matching |
-| `delete_edge(u, v)` | Delete an undirected edge and repair the matching |
-| `get_matching()` | Return a copy of the current maximal matching |
-| `is_maximal()` | Verify that the current matching is maximal |
-| `matching_size()` | Number of edges in the matching |
-| `partner(v)` | Return the partner of vertex `v` in the matching, or `None` |
-| `statistics()` | Runtime statistics (n, m, matching size, update counters, etc.) |
-| `augment_m1_at_subphase_boundary()` | Augment `M_1` at the next subphase boundary |
-| `try_augment_m1(start, matched_in_m1)` | BFS for an `M_1` augmenting path starting at `start` |
-| `flip_augmenting_path(path)` | Flip edges along an augmenting path |
-
-### Construction Primitives (`fdmm.z_system`)
-
-| Function | Description |
-|----------|-------------|
-| `build_z_system(graph, z)` | Build a fresh `ZSubgraphSystem` from a graph |
-| `build_multi_level_system(graph, level_zs)` | Stack z-systems for the recursive algorithm |
-| `edge_switch_inside_B(...)` | Alternating-path capacity recovery inside `B` |
-| `promote_u_vertex(...)` | Try to promote a `U`-vertex into `B` |
-
-### Edge Colouring (`fdmm.edge_coloring`)
-
-| Function | Description |
-|----------|-------------|
-| `abb_edge_color(graph, delta)` | Degree-ordered greedy `(Δ+1)`-colouring |
-| `vizing_edge_color(graph, delta)` | Classical Vizing recolouring with backtracking fallback |
-| `color_single_edge`, `alternating_path`, `flip_path` | Building-block primitives |
-
-### Invariants and Accounting
-
-| Function / Class | Description |
-|------------------|-------------|
-| `check_maximal_matching(graph, matching)` | Brute-force maximality verifier |
-| `check_z_system_invariants(system)` | Verifies every z-system property |
-| `check_multi_level_i3(multi)` | I3 check (returns False when constant is unknown) |
-| `UpdateAccountant` | Counters for empirical cost auditing |
-| `random_update_sequence`, `replay_updates` | Reproducible trace generation |
-| `run_parallel_benchmarks`, `compare_modes` | Multiprocessing benchmark drivers |
-| `visualise_system`, `visualise_matching` | ASCII renderers for debugging |
-
----
-
-## Project Structure
-
-```
-fdmm/
-├── pyproject.toml          # Build & tool config
-├── README.md
-├── LICENSE
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-├── CODE_OF_CONDUCT.md
-├── SECURITY.md
-├── .github/                # CI, issue & PR templates, dependabot
-├── src/
-│   └── fdmm/               # SDK package
-│       ├── __init__.py     # Public API exports
-│       ├── types.py        # Vertex, Edge, Matching, canonical_edge
-│       ├── graph.py        # DynamicGraph
-│       ├── matching.py     # Greedy matcher and partner helpers
-│       ├── edge_coloring.py# abb_edge_color / vizing_edge_color
-│       ├── z_system.py     # ZSubgraphSystem, MultiLevelSystem, builders
-│       ├── dynamic_matching.py  # DynamicMaximalMatching
-│       ├── updates.py      # Insertion / deletion / rematch handlers
-│       ├── invariants.py   # Standalone invariant checkers
-│       ├── accounting.py   # UpdateAccountant
-│       ├── simulation.py   # Random update generators
-│       ├── parallel.py     # Multiprocessing benchmark driver
-│       ├── visualise.py    # ASCII renderers
-│       └── cli.py          # Console-script entry point
-├── tests/
-│   └── test_fdmm.py
-├── benchmarks/
-│   └── bench_fdmm.py
-├── scripts/
-│   └── demo.py
-├── examples/
-│   ├── example_basic.py
-│   └── example_multilevel.py
-└── docs/
-    ├── index.md
-    ├── getting-started.md
-    ├── architecture.md
-    ├── faq.md
-    ├── paper_restatement.md
-    └── audit_report.md
-```
-
----
-
-## Testing
+### Run a benchmark
 
 ```bash
-pytest                          # run the full suite
-pytest -k invariants            # invariant checkers only
-pytest --cov=fdmm tests/        # coverage report
+python benchmarks/bench_axiom.py --n 200 --updates 5000 --mode tiered
+```
+
+### Compare modes in parallel
+
+```python
+from axiom.parallel import compare
+
+results = compare(n=100, updates=2000, seed=42, max_workers=2)
+for mode, r in results.items():
+    print(f"{mode}: {r.updates_per_sec:.0f} updates/sec, matching={r.matching_size}")
 ```
 
 ---
 
-## Build
+## Architecture
 
-```bash
-python -m build                 # sdist + wheel
+Each Axiom module owns one clear responsibility:
+
+| Module | Responsibility |
+|---|---|
+| `axiom.core` | The `Matcher` orchestrator: graph, matching, z-system, augment, rebuild dispatch |
+| `axiom.graph` | `Adjacency`: the dynamic undirected graph (BST-replacement: hash sets) |
+| `axiom.system` | `System`: the single-level z-subgraph system + `build`, `promote`, `switch` |
+| `axiom.hierarchy` | `Hierarchy`: the *k*-level system + `build_hierarchy` + (I3) `check_i3`, `maintain_i3` |
+| `axiom.color` | `Colorer` Protocol + `Greedy` and `Vizing` implementations + alternating-path helpers |
+| `axiom.matching` | Pure helpers: `greedy`, `partner`, `partners`, `canonical` |
+| `axiom.repair` | `Repair`: encapsulates insertion/deletion local handling and rematch dispatch |
+| `axiom.rebuild` | `Rebuild` Protocol + `Basic` and `Tiered` strategy implementations |
+| `axiom.augment` | `augment`, `flip`: alternating-path search over a matching |
+| `axiom.ledger` | `Ledger`: explicit counters for amortised-cost diagnostics |
+| `axiom.invariant` | `is_maximal_matching`, `valid`, `check_i3`: read-only validators |
+| `axiom.simulation` | `random_updates`, `replay`, `Update`: deterministic update sequences |
+| `axiom.parallel` | `Benchmark`, `worker`, `run_parallel`, `compare`: parallel benchmarks |
+| `axiom.visualize` | `visualize_system`, `visualize_matching`, `visualize_adjacency`: ASCII renderers |
+| `axiom.types` | Type aliases (`Vertex`, `Edge`, `Matching`, `Color`, `Coloring`), Protocols, `canonical` |
+| `axiom.cli` | `main(argv)`: command-line entry point |
+
+---
+
+## API
+
+The full public surface is in [`axiom/__init__.py`](axiom/__init__.py). Highlights:
+
+```python
+# # Core
+from axiom import Matcher
+
+algo = Matcher(
+    n=100,
+    mode="basic",                  # or "tiered"
+    graph=None,                    # default Adjacency(100)
+    colorer=None,                  # default Greedy()
+    policy=None,                   # default Basic() or Tiered() by mode
+)
+
+algo.insert(u, v)                 # insert edge (u, v)
+algo.delete(u, v)                 # delete edge (u, v)
+algo.matching()                   # copy of the maintained matching
+algo.maximal()                    # is the matching maximal?
+algo.size()                       # number of edges in the matching
+algo.partner(v)                   # partner of v, or None (O(1) via partner map)
+algo.partners()                   # full partner dict
+algo.stats()                      # bookkeeping counters
+
+# # Augmenting-path API (public, promoted from private in v0.5.0)
+algo.augment()                    # run subphase-boundary augmentation; returns count
+algo.try_augment(start, matched)  # try augmenting along an alternating path
+algo.flip(path)                   # flip alternating edges in a path
+
+# # Construction helpers
+from axiom import (
+    Adjacency,                    # graph
+    System, Hierarchy,            # z-system / multi-level
+    Basic, Tiered,                # rebuild policies
+    Greedy, Vizing,               # edge colorers
+    Ledger,                       # accounting
+    is_maximal_matching, valid, check_i3,  # invariant checkers
+    random_updates, replay, Update,       # simulation
+    visualize_system, visualize_matching, visualize_adjacency,
+    Benchmark, run_parallel, compare,      # parallel benchmarks
+)
+
+# # Construction primitives
+from axiom.system import build, switch, promote
+from axiom.hierarchy import build_hierarchy
 ```
 
 ---
 
-## Development
+## Invariants
 
-```bash
-# Install with dev dependencies
-pip install -e ".[dev]"
+The implementation tracks the seven invariants of the *z*-subgraph system from Section 2 of the paper:
 
-# Run tests
-pytest
+1. Degree bounds in *M*: every *v* &isin; *S* has *z* incident *M*-edges; every *u* &isin; *U* has &le; *z*.
+2. *U*-*U* degree bound: |*N*<sub>G</sub>(*u*) &cap; *U*| &le; *z* for *u* &isin; *U*.
+3. (P1): |*N*<sub>G</sub>(*u*) &cap; *B*| &le; 2*z* for *u* &isin; *U*.
+4. (P2): every *M*-edge incident to *a* &isin; *A* meets a vertex of *S*.
+5. &Lambda;(*u*) = *N*<sub>G</sub>(*u*) &cap; (*B* &cup; *U*) for *u* &isin; *U*.
+6. *L*(*a*) = *N*<sub>G</sub>(*a*) &cap; *U* for *a* &isin; *A*.
+7. (Multi-level I3): &le; 2&tau; vertices of *A*<sub>1</sub> are matched by *M*<sup>*</sup> into *R*<sub>1</sub>.
 
-# Lint
-ruff check src/ tests/
+All invariants are checked by the methods on `System` / `Hierarchy`, and the standalone helpers in `axiom.invariant`:
 
-# Format
-ruff format src/ tests/
+```python
+from axiom.invariant import is_maximal_matching, valid, check_i3
 
-# Type check
-mypy src/
-
-# All checks
-pytest && ruff check src/ tests/ && mypy src/
-```
-
-### Code Style
-
-- Line length: 88
-- Quotes: double (`"`)
-- Formatting: ruff (auto-format with `ruff format`)
-- Type hints: required on every public signature
-- Docstrings: Google-style, covering parameters, returns, raised exceptions,
-  side effects, and complexity
-- No semi-private naming (`_foo`) on public helpers — all identifiers are
-  public; use `_`-prefix only for genuinely internal scratch state.
-
-### Commit Conventions
-
-We use [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat: add ABB+26 deterministic edge colouring
-fix: handle edge case in stale-edge cleanup
-docs: add API reference for previously private helpers
-refactor: convert semi-private helpers to public API
-test: add parity tests for cached vs streamed memory
-chore: update ruff config
+assert is_maximal_matching(graph, matching)
+assert valid(system)
+assert check_i3(hierarchy, matching, r=phase_length, z=level_z)
 ```
 
 ---
 
-## Release
+## Modes
 
-Versions follow [Semantic Versioning](https://semver.org/). Releases are tagged
-via `version:X.Y.Z` commits in [CHANGELOG.md](CHANGELOG.md) and published to
-PyPI via the CI workflow.
+### `basic`
+
+A single-level *z*-system with:
+
+- *z* = &lceil;*n*<sup>2/3</sup>&rceil;
+- *r* = phase length = &lceil;*n*<sup>4/3</sup>&rceil;
+- subphase length = *r* / *z*
+
+Per-update cost: &Otilde;(*n*<sup>2/3</sup>) amortised.
+
+### `tiered`
+
+A *k*-level recursive construction with:
+
+- *z*<sub>1</sub> = *n*, *z*<sub>*i*</sub> = *z*<sub>*i*-1</sub> / 2
+- *k* = &lceil;log<sub>2</sub> &radic;*n*&rceil; &asymp;; &half; log *n*
+- level *k*'s *z*<sub>*k*</sub> &asymp;; &radic;*n*
+
+Per-update cost: *n*<sup>1/2+o(1)</sup> amortised (Theorem 1.1 of the paper).
+
+Invariant (I3) is enforced after every update in tiered mode: any *A*<sub>1</sub>-vertex matched into *R*<sub>1</sub> is broken and re-routed via the existing rematch dispatch.
+
+### Mode selection
+
+Use the `mode` string for backwards compatibility:
+
+```python
+algo = Matcher(n=100, mode="basic")    # Basic policy
+algo = Matcher(n=100, mode="tiered")    # Tiered policy
+```
+
+Or pass a policy directly (recommended for new code):
+
+```python
+from axiom.rebuild import Basic, Tiered
+
+algo = Matcher(n=100, policy=Basic())
+algo = Matcher(n=100, policy=Tiered())
+```
 
 ---
 
-## Tech Stack
+## Invariants, assumptions, edge cases
 
-| Category      | Technology                                    |
-|---------------|-----------------------------------------------|
-| Language      | Python 3.10+                                  |
-| Build         | setuptools (pyproject.toml)                   |
-| Lint / Format | [ruff](https://docs.astral.sh/ruff/)          |
-| Type Check    | [mypy](https://mypy-lang.org/) (strict)       |
-| Testing       | [pytest](https://docs.pytest.org/), pytest-cov, hypothesis |
-| CI            | GitHub Actions                                |
+| Assumption | Notes |
+|---|---|
+| Vertex labels are dense integers in `[0, n)` | Enforced by `Adjacency.validate_vertex`.` |
+| No self-loops | `Adjacency.add_edge` silently ignores; `strict=True` raises. |
+| No parallel edges | `Adjacency.add_edge` silently ignores duplicates; `strict=True` raises. |
+| Empty graph | `n == 0` is supported; the empty matching is trivially maximal. |
+| Single vertex | `n == 1` is supported; the matching is empty. |
 
----
+### Limitations
 
-## Roadmap
-
-See [CHANGELOG.md](CHANGELOG.md) for the full release history and pending
-items.
-
-- **v0.4.x** — Current: basic and multilevel modes, comprehensive test
-  suite, simulation utilities, visualisation, parallel benchmarking.
-- **v0.5.0** — Subphase-aware M₁ augmentation, exact phase constants.
-- **v1.0.0** — ABB+26 deterministic edge colouring, incremental M*
-  maintenance, PyPI release.
+- **Empirical counters vs asymptotic guarantees.** The `Ledger` reports what actually happened in Python. The paper's amortised bounds assume a BST-based adjacency layer; the Python reproduction uses hash sets (amortised *O*(1) per op). The constants differ; the asymptotic shape is the same.
+- **ABB+26 colouring.** The paper cites Theorem 2.4 (deterministic (&Delta;+1)-colouring in *O*(*m*<sup>1+o(1)</sup>) time). The implementation substitutes Vizing's theorem plus a degree-ordered greedy colourer, both of which run in *O*(*m* &middot; &Delta;) worst case. This is **less efficient** than the paper's colouring but matches its correctness contract.
+- **Multi-level derivation.** The paper derives a *z*<sub>*i*</sub>-system from a *z*<sub>*i*-1</sub>-system in *O*(*n*<sup>1+o(1)</sup>*z*<sub>1</sub>) time, faster than rebuilding when the graph is dense. The implementation rebuilds each level independently from the current graph (clearer, empirically sufficient for the stress tests). The recursive derivation mechanics (*E*'<sub>*D*</sub> edge-set selection, list inheritance) are documented as DEFERRED-OPEN-PROBLEMS in `docs/paper_restatement.md`.
 
 ---
 
-## Contributing
+## Citation
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+This implementation is a paper-faithful reproduction of:
 
-- Development setup
-- Pull request process
-- Coding standards
-- Test expectations
+```
+Chuzhoy, J., Khanna, S., Song, J. (2026).
+A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching.
+arXiv:2605.00797v1.
+```
 
-## Code of Conduct
+Please cite the paper when using Axiom in academic work.
 
-This project follows the [Contributor Covenant v2.1](CODE_OF_CONDUCT.md).
-By participating you agree to abide by its terms.
-
-## Security
-
-Report vulnerabilities to **sachncs@gmail.com** — see [SECURITY.md](SECURITY.md).
+---
 
 ## License
 
-[MIT](LICENSE) © 2026 Sachin
-
----
-
-*Based on "A Faster Deterministic Algorithm for Fully Dynamic Maximal Matching" by Julia Chuzhoy, Sanjeev Khanna, and Junkai Song (arXiv:2605.00797v1).*
+[MIT](LICENSE) &copy; 2026 Sachin.
