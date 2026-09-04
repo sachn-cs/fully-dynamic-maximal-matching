@@ -322,39 +322,17 @@ class Matcher:
                 self.__try_augment_seed(s, matched_in_seed)
 
     def __try_augment_seed(self, start: Vertex, matched_in_seed: set[Vertex]) -> bool:
-        visited: set[tuple[Vertex, bool]] = {(start, False)}
-        queue: deque[tuple[Vertex, bool, list[Vertex]]] = deque()
-        queue.append((start, False, [start]))
+        from axiom.augment import augment
 
-        while queue:
-            curr, via_seed, path = queue.popleft()
+        def is_matched(v: Vertex) -> bool:
+            return v in matched_in_seed
 
-            for w in self.graph.neighbors(curr):
-                e = canonical(curr, w)
-                is_seed = e in self.seed_matching
-
-                if via_seed and not is_seed:
-                    if (w, True) not in visited:
-                        new_path = path + [w]
-                        if w not in matched_in_seed:
-                            self.__flip_augmenting_path(new_path)
-                            return True
-                        visited.add((w, True))
-                        queue.append((w, True, new_path))
-                elif not via_seed and is_seed:
-                    if (w, False) not in visited:
-                        visited.add((w, False))
-                        queue.append((w, False, path + [w]))
-
-        return False
-
-    def __flip_augmenting_path(self, path: list[Vertex]) -> None:
-        for i in range(0, len(path) - 1, 2):
-            e = canonical(path[i], path[i + 1])
-            if e in self.seed_matching:
-                self.seed_matching.discard(e)
-            else:
-                self.seed_matching.add(e)
+        return augment(
+            self.seed_matching,
+            self.graph.neighbors,
+            start,
+            is_matched,
+        )
 
     def insert(self, u: Vertex, v: Vertex) -> None:
         """Insert edge ``(u, v)`` and repair the maximal matching.
