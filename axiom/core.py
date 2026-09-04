@@ -48,7 +48,8 @@ from axiom.types import (
     Vertex,
     canonical_edge,
 )
-from axiom.system import MultiLevelSystem, System, build_z_system
+from axiom.hierarchy import Hierarchy
+from axiom.system import System, build_z_system
 
 
 class Matcher:
@@ -134,7 +135,7 @@ class Matcher:
         self.matchings: list[Matching] = []
         self.seed_matching: Matching = set()
 
-        self.multi: MultiLevelSystem | None = None
+        self.multi: Hierarchy | None = None
         self.level_zs: list[int] = []
         self.k: int = 0
 
@@ -177,7 +178,7 @@ class Matcher:
         self.accountant.record_phase_rebuild()
 
     def __rebuild_multilevel(self) -> None:
-        self.multi = MultiLevelSystem(graph=self.graph, k=self.k)
+        self.multi = Hierarchy(graph=self.graph, k=self.k)
         self.multi.levels = []
         for z in self.level_zs:
             level = build_z_system(self.graph, z)

@@ -15,10 +15,10 @@ The supporting modules provide:
 
 * :class:`DynamicGraph` -- a thin adjacency-set wrapper that stands in
   for the paper's BST-based adjacency layer.
-* :class:`System` and :class:`MultiLevelSystem` -- the
+* :class:`System` and :class:`Hierarchy` -- the
   combinatorial state used by both modes.
 * The :math:`z`-system construction primitives
-  :func:`build_z_system`, :func:`build_multi_level_system`,
+  :func:`build_z_system`, :func:`build_hierarchy`,
   :func:`edge_switch_inside_B`, and :func:`promote_u_vertex`.
 * The edge colouring utilities :class:`GreedyColorer`,
   :class:`VizingColorer`, :func:`recolor_for_edge`,
@@ -59,10 +59,9 @@ from axiom.visualize import (
     visualize_matching,
     visualize_system,
 )
+from axiom.hierarchy import Hierarchy, build_hierarchy
 from axiom.system import (
-    MultiLevelSystem,
     System,
-    build_multi_level_system,
     build_z_system,
     edge_switch_inside_B,
     promote_u_vertex,
@@ -76,7 +75,7 @@ __all__ = [
     "GreedyColorer",
     "VizingColorer",
     "System",
-    "MultiLevelSystem",
+    "Hierarchy",
     "Edge",
     "Matching",
     "Vertex",
@@ -104,7 +103,7 @@ __all__ = [
     "recolor_for_edge",
     "find_edge_of_color",
     "build_z_system",
-    "build_multi_level_system",
+    "build_hierarchy",
     "edge_switch_inside_B",
     "promote_u_vertex",
 ]

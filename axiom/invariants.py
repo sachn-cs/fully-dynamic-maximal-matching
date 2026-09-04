@@ -22,7 +22,8 @@ Mathematical background:
 from __future__ import annotations
 
 from axiom.types import Graph, Matching, Vertex
-from axiom.system import MultiLevelSystem, System
+from axiom.hierarchy import Hierarchy
+from axiom.system import System
 
 
 def check_z_system_invariants(system: System) -> bool:
@@ -71,10 +72,10 @@ def check_maximal_matching(graph: Graph, matching: Matching) -> bool:
     return True
 
 
-def check_multi_level_i3(multi: MultiLevelSystem) -> bool:
+def check_multi_level_i3(multi: Hierarchy) -> bool:
     """Return ``True`` iff invariant (I3) is satisfied for ``multi``.
 
-    Wraps :meth:`MultiLevelSystem.level_1_invariant_I3` and converts
+    Wraps :meth:`Hierarchy.level_1_invariant_I3` and converts
     the unavoidable :class:`NotImplementedError` into a ``False``
     answer.  This makes the invariant conservative: the checker will
     *never* silently pass.

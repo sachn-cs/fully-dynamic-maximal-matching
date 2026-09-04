@@ -18,7 +18,8 @@ from axiom.core import Matcher
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
 from axiom.simulation import random_update_sequence, replay_updates
 from axiom.types import canonical_edge
-from axiom.system import MultiLevelSystem, System, build_z_system
+from axiom.hierarchy import Hierarchy
+from axiom.system import System, build_z_system
 
 # ------------------------------------------------------------------
 # Graph layer
@@ -827,12 +828,12 @@ class TestMatcher:
 # ------------------------------------------------------------------
 
 
-class TestMultiLevelSystem:
-    """Tests for :class:`axiom.system.MultiLevelSystem`."""
+class TestHierarchy:
+    """Tests for :class:`axiom.hierarchy.Hierarchy`."""
 
     def test_empty(self) -> None:
         g = DynamicGraph(4)
-        mls = MultiLevelSystem(graph=g, k=2)
+        mls = Hierarchy(graph=g, k=2)
         assert mls.k == 2
         assert not mls.levels
 
@@ -840,7 +841,7 @@ class TestMultiLevelSystem:
         g = DynamicGraph(4)
         g.add_edge(0, 1)
         g.add_edge(1, 2)
-        mls = MultiLevelSystem(graph=g, k=2)
+        mls = Hierarchy(graph=g, k=2)
         mls.levels = [
             System(graph=g, z=2, A={0}, B={1}, U={2, 3}),
             System(graph=g, z=1, A={0}, B={1}, U={2, 3}),
@@ -849,7 +850,7 @@ class TestMultiLevelSystem:
 
     def test_level_1_invariant_I3_empty(self) -> None:
         g = DynamicGraph(0)
-        mls = MultiLevelSystem(graph=g, k=1)
+        mls = Hierarchy(graph=g, k=1)
         with pytest.raises(NotImplementedError):
             mls.level_1_invariant_I3()
 
@@ -857,7 +858,7 @@ class TestMultiLevelSystem:
         from axiom.invariants import check_multi_level_i3
 
         g = DynamicGraph(0)
-        mls = MultiLevelSystem(graph=g, k=1)
+        mls = Hierarchy(graph=g, k=1)
         assert check_multi_level_i3(mls) is False
 
 
