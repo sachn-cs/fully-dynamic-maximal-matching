@@ -176,7 +176,7 @@ class TestAdjacency:
 # ------------------------------------------------------------------
 
 
-class TestEdgeColoring:
+class TestColor:
     """Tests for :mod:`axiom.color`."""
 
     def _is_proper(self, graph: Adjacency, coloring: dict) -> bool:
@@ -294,7 +294,7 @@ class TestEdgeColoring:
 # ------------------------------------------------------------------
 
 
-class TestMatchingHelpers:
+class TestMatching:
     """Tests for :mod:`axiom.matching`."""
 
     def test_greedy(self) -> None:
@@ -438,7 +438,7 @@ class TestSystem:
 # ------------------------------------------------------------------
 
 
-class TestBuildZSystem:
+class TestBuild:
     """Tests for :func:`axiom.system.build`."""
 
     def test_build_on_empty_graph(self) -> None:
@@ -875,7 +875,7 @@ class TestHierarchy:
 # ------------------------------------------------------------------
 
 
-class TestSimulation:
+class TestSequence:
     """Tests for :mod:`axiom.simulation`."""
 
     def test_random_update_sequence(self) -> None:
