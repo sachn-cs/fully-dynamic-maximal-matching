@@ -18,12 +18,12 @@ _src = __import__("os").path.join(_repo_root, "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-from axiom.matcher import MaximalMatcher
+from axiom.core import Matcher
 from axiom.simulation import random_update_sequence
 
 
 def bench(n: int, mode: str, updates: int, seed: int) -> dict[str, float]:
-    algo = MaximalMatcher(n, mode=mode)
+    algo = Matcher(n, mode=mode)
     rng = random.Random(seed)
     seq = list(random_update_sequence(n, updates, rng))
 

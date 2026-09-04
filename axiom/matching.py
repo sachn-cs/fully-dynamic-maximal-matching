@@ -11,7 +11,7 @@ Responsibilities:
       scan (used as a baseline and as a fallback when repair fails).
     * Verify maximality in :math:`O(n + m)` by checking every vertex.
     * Provide :math:`O(|M|)` partner lookups and :math:`O(1)` partner
-      maps used by the dynamic update code in :mod:`axiom.matcher`.
+      maps used by the dynamic update code in :mod:`axiom.core`.
 
 Assumptions:
     * The graph may be empty; every helper tolerates ``n == 0``.

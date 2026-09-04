@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from axiom.matcher import MaximalMatcher
+    from axiom.core import Matcher
     from axiom.z_system import ZSubgraphSystem
 
 
@@ -98,7 +98,7 @@ def visualize_system(system: ZSubgraphSystem, width: int = 60) -> str:
     return "\n".join(lines)
 
 
-def visualize_matching(algo: MaximalMatcher, width: int = 60) -> str:
+def visualize_matching(algo: Matcher, width: int = 60) -> str:
     """Return an ASCII representation of the current matching state.
 
     Args:
@@ -153,7 +153,7 @@ def visualize_matching(algo: MaximalMatcher, width: int = 60) -> str:
     return "\n".join(lines)
 
 
-def visualize_graph_adjacency(algo: MaximalMatcher, width: int = 60) -> str:
+def visualize_graph_adjacency(algo: Matcher, width: int = 60) -> str:
     """Return an ASCII adjacency list representation of the graph.
 
     Args:

@@ -26,7 +26,7 @@ Algorithm sketch:
     every ``phase_length = n^{4/3}`` updates to amortise the rebuild cost.
 
 Thread-safety:
-    Each ``MaximalMatcher`` instance is intended to be used from
+    Each :class:`Matcher` instance is intended to be used from
     a single thread.  Concurrent updates on the same instance are not
     supported.
 """
@@ -51,7 +51,7 @@ from axiom.types import (
 from axiom.z_system import MultiLevelSystem, ZSubgraphSystem, build_z_system
 
 
-class MaximalMatcher:
+class Matcher:
     r"""Maintains a maximal matching under edge insertions and deletions.
 
     The algorithm can operate in two modes:
@@ -98,7 +98,7 @@ class MaximalMatcher:
         ValueError: If ``n`` is negative or ``mode`` is unknown.
 
     Example:
-        >>> algo = MaximalMatcher(n=10, mode="basic")
+        >>> algo = Matcher(n=10, mode="basic")
         >>> algo.insert_edge(0, 1)
         >>> algo.insert_edge(2, 3)
         >>> algo.is_maximal()

@@ -14,7 +14,7 @@ Responsibilities:
 
 Interactions:
     * Used as the storage layer by the dynamic matcher in
-      :mod:`axiom.matcher`.
+      :mod:`axiom.core`.
     * The greedy matching helpers in :mod:`axiom.matching` read only.
     * The :mod:`axiom.z_system` module reads adjacency when reconstructing
       :math:`\Lambda` and :math:`L` lists.

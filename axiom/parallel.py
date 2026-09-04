@@ -1,14 +1,14 @@
 """Multiprocessing support for parallel update processing.
 
 This module provides utilities for running multiple
-:class:`MaximalMatcher` instances in parallel, useful for
+:class:`Matcher` instances in parallel, useful for
 benchmarking and comparing the basic and multilevel modes.
 
 **Engineering utility** -- not part of the paper's baseline algorithm.
 
 Process / thread safety:
     * Each worker process builds and tears down its own
-      :class:`MaximalMatcher` instance; nothing is shared
+      :class:`Matcher` instance; nothing is shared
       across processes.
     * The ``multiprocessing.Pool`` used by :func:`run_parallel_benchmarks`
       forks its workers, so the algorithm must be safe to import
@@ -68,9 +68,9 @@ def run_benchmark_worker(
     """
     import time
 
-    from axiom.matcher import MaximalMatcher
+    from axiom.core import Matcher
 
-    algo = MaximalMatcher(n, mode=mode)
+    algo = Matcher(n, mode=mode)
     rng = __import__("random").Random(seed)
     seq = list(random_update_sequence(n, updates, rng))
 

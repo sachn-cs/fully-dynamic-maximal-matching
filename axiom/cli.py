@@ -1,6 +1,6 @@
 """Command-line interface for the FDMM reproduction.
 
-A thin wrapper around :class:`MaximalMatcher` plus the
+A thin wrapper around :class:`Matcher` plus the
 :func:`random_update_sequence` generator.  It is useful as a smoke
 test: it runs a fixed number of random updates, asserts maximality
 after each one, and prints timing statistics on exit.
@@ -24,7 +24,7 @@ import random
 import sys
 import time
 
-from axiom.matcher import MaximalMatcher
+from axiom.core import Matcher
 from axiom.simulation import random_update_sequence
 
 
@@ -55,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     args = parser.parse_args(argv)
 
-    algo = MaximalMatcher(args.n, mode=args.mode)
+    algo = Matcher(args.n, mode=args.mode)
     rng = random.Random(args.seed)
     updates = list(random_update_sequence(args.n, args.updates, rng))
 

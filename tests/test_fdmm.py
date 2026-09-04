@@ -14,7 +14,7 @@ import pytest
 from axiom.coloring import VizingColorer
 from axiom.graph import DynamicGraph
 from axiom.invariants import check_maximal_matching
-from axiom.matcher import MaximalMatcher
+from axiom.core import Matcher
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
 from axiom.simulation import random_update_sequence, replay_updates
 from axiom.types import canonical_edge
@@ -487,22 +487,22 @@ class TestBuildZSystem:
 # ------------------------------------------------------------------
 
 
-class TestMaximalMatcher:
-    """End-to-end tests for :class:`axiom.matcher.MaximalMatcher`."""
+class TestMatcher:
+    """End-to-end tests for :class:`axiom.core.Matcher`."""
 
     def test_basic_init(self) -> None:
-        algo = MaximalMatcher(10, mode="basic")
+        algo = Matcher(10, mode="basic")
         assert algo.n == 10
         assert algo.mode == "basic"
         assert algo.is_maximal()
 
     def test_multilevel_init(self) -> None:
-        algo = MaximalMatcher(10, mode="multilevel")
+        algo = Matcher(10, mode="multilevel")
         assert algo.mode == "multilevel"
         assert algo.is_maximal()
 
     def test_insert_then_delete_basic(self) -> None:
-        algo = MaximalMatcher(4, mode="basic")
+        algo = Matcher(4, mode="basic")
         algo.insert_edge(0, 1)
         assert algo.is_maximal()
         algo.insert_edge(1, 2)
@@ -518,7 +518,7 @@ class TestMaximalMatcher:
         assert algo.is_maximal()
 
     def test_insert_then_delete_multilevel(self) -> None:
-        algo = MaximalMatcher(4, mode="multilevel")
+        algo = Matcher(4, mode="multilevel")
         algo.insert_edge(0, 1)
         assert algo.is_maximal()
         algo.insert_edge(1, 2)
@@ -534,7 +534,7 @@ class TestMaximalMatcher:
         assert algo.is_maximal()
 
     def test_triangle_updates(self) -> None:
-        algo = MaximalMatcher(3, mode="basic")
+        algo = Matcher(3, mode="basic")
         algo.insert_edge(0, 1)
         algo.insert_edge(1, 2)
         algo.insert_edge(2, 0)
@@ -545,7 +545,7 @@ class TestMaximalMatcher:
         assert algo.is_maximal()
 
     def test_star_updates(self) -> None:
-        algo = MaximalMatcher(5, mode="basic")
+        algo = Matcher(5, mode="basic")
         for i in range(1, 5):
             algo.insert_edge(0, i)
         assert algo.is_maximal()
@@ -555,7 +555,7 @@ class TestMaximalMatcher:
         assert algo.is_maximal()
 
     def test_path_updates(self) -> None:
-        algo = MaximalMatcher(5, mode="basic")
+        algo = Matcher(5, mode="basic")
         for i in range(4):
             algo.insert_edge(i, i + 1)
         assert algo.is_maximal()
@@ -565,7 +565,7 @@ class TestMaximalMatcher:
         assert algo.is_maximal()
 
     def test_statistics(self) -> None:
-        algo = MaximalMatcher(5, mode="basic")
+        algo = Matcher(5, mode="basic")
         algo.insert_edge(0, 1)
         stats = algo.statistics()
         assert stats["n"] == 5
@@ -574,7 +574,7 @@ class TestMaximalMatcher:
         assert "total_updates" in stats
 
     def test_rebuild_triggered(self) -> None:
-        algo = MaximalMatcher(2, mode="basic")
+        algo = Matcher(2, mode="basic")
         algo.phase_length = 3
         algo.insert_edge(0, 1)
         assert algo.update_count == 1
@@ -585,7 +585,7 @@ class TestMaximalMatcher:
         assert algo.is_maximal()
 
     def test_is_maximal_after_sequence(self) -> None:
-        algo = MaximalMatcher(6, mode="basic")
+        algo = Matcher(6, mode="basic")
         edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 0)]
         for u, v in edges:
             algo.insert_edge(u, v)
@@ -597,31 +597,31 @@ class TestMaximalMatcher:
 
     def test_invalid_mode(self) -> None:
         with pytest.raises(ValueError):
-            MaximalMatcher(5, mode="fast")
+            Matcher(5, mode="fast")
 
     def test_negative_vertices(self) -> None:
         with pytest.raises(ValueError):
-            MaximalMatcher(-1)
+            Matcher(-1)
 
     def test_empty_graph_basic(self) -> None:
-        algo = MaximalMatcher(0, mode="basic")
+        algo = Matcher(0, mode="basic")
         assert algo.is_maximal()
         assert algo.matching_size() == 0
 
     def test_empty_graph_multilevel(self) -> None:
-        algo = MaximalMatcher(0, mode="multilevel")
+        algo = Matcher(0, mode="multilevel")
         assert algo.is_maximal()
         assert algo.matching_size() == 0
 
     def test_single_vertex_graph(self) -> None:
-        algo = MaximalMatcher(1, mode="basic")
+        algo = Matcher(1, mode="basic")
         algo.insert_edge(0, 0)
         assert algo.is_maximal()
         assert algo.matching_size() == 0
 
     def test_complete_graph_basic(self) -> None:
         n = 6
-        algo = MaximalMatcher(n, mode="basic")
+        algo = Matcher(n, mode="basic")
         for i in range(n):
             for j in range(i + 1, n):
                 algo.insert_edge(i, j)
@@ -630,7 +630,7 @@ class TestMaximalMatcher:
 
     def test_complete_graph_then_remove_all(self) -> None:
         n = 5
-        algo = MaximalMatcher(n, mode="basic")
+        algo = Matcher(n, mode="basic")
         edges = [(i, j) for i in range(n) for j in range(i + 1, n)]
         for u, v in edges:
             algo.insert_edge(u, v)
@@ -642,7 +642,7 @@ class TestMaximalMatcher:
 
     def test_bipartite_graph(self) -> None:
         n, m = 3, 4
-        algo = MaximalMatcher(n + m, mode="basic")
+        algo = Matcher(n + m, mode="basic")
         for i in range(n):
             for j in range(m):
                 algo.insert_edge(i, n + j)
@@ -650,7 +650,7 @@ class TestMaximalMatcher:
         assert algo.matching_size() >= min(n, m)
 
     def test_repeated_insert_delete_same_edge(self) -> None:
-        algo = MaximalMatcher(2, mode="basic")
+        algo = Matcher(2, mode="basic")
         for _ in range(20):
             algo.insert_edge(0, 1)
             assert algo.is_maximal()
@@ -660,7 +660,7 @@ class TestMaximalMatcher:
     def test_random_stress_basic(self) -> None:
         n = 10
         rng = random.Random(42)
-        algo = MaximalMatcher(n, mode="basic")
+        algo = Matcher(n, mode="basic")
         edges: set[tuple[int, int]] = set()
         for _ in range(200):
             u = rng.randrange(n)
@@ -679,7 +679,7 @@ class TestMaximalMatcher:
     def test_random_stress_multilevel(self) -> None:
         n = 10
         rng = random.Random(123)
-        algo = MaximalMatcher(n, mode="multilevel")
+        algo = Matcher(n, mode="multilevel")
         edges: set[tuple[int, int]] = set()
         for _ in range(200):
             u = rng.randrange(n)
@@ -696,7 +696,7 @@ class TestMaximalMatcher:
             assert algo.is_maximal()
 
     def test_alternating_insert_delete_path(self) -> None:
-        algo = MaximalMatcher(4, mode="basic")
+        algo = Matcher(4, mode="basic")
         for _ in range(10):
             algo.insert_edge(0, 1)
             assert algo.is_maximal()
@@ -712,7 +712,7 @@ class TestMaximalMatcher:
             assert algo.is_maximal()
 
     def test_matching_is_subset_of_edges(self) -> None:
-        algo = MaximalMatcher(5, mode="basic")
+        algo = Matcher(5, mode="basic")
         algo.insert_edge(0, 1)
         algo.insert_edge(1, 2)
         algo.insert_edge(2, 3)
@@ -721,19 +721,19 @@ class TestMaximalMatcher:
             assert algo.graph.has_edge(e[0], e[1])
 
     def test_delete_nonexistent_edge(self) -> None:
-        algo = MaximalMatcher(3, mode="basic")
+        algo = Matcher(3, mode="basic")
         algo.delete_edge(0, 1)
         assert algo.is_maximal()
 
     def test_get_matching_returns_copy(self) -> None:
-        algo = MaximalMatcher(2, mode="basic")
+        algo = Matcher(2, mode="basic")
         algo.insert_edge(0, 1)
         m1 = algo.get_matching()
         m2 = algo.get_matching()
         assert m1 is not m2
 
     def test_accounting_counters(self) -> None:
-        algo = MaximalMatcher(4, mode="basic")
+        algo = Matcher(4, mode="basic")
         algo.insert_edge(0, 1)
         algo.insert_edge(1, 2)
         algo.delete_edge(0, 1)
@@ -743,14 +743,14 @@ class TestMaximalMatcher:
         assert stats["total_deletions"] == 1
 
     def test_partner_method(self) -> None:
-        algo = MaximalMatcher(4, mode="basic")
+        algo = Matcher(4, mode="basic")
         algo.insert_edge(0, 1)
         assert algo.partner(0) == 1
         assert algo.partner(1) == 0
         assert algo.partner(2) is None
 
     def test_phase_transition(self) -> None:
-        algo = MaximalMatcher(4, mode="basic")
+        algo = Matcher(4, mode="basic")
         algo.phase_length = 5
         for _i in range(5):
             algo.insert_edge(0, 1)
@@ -758,7 +758,7 @@ class TestMaximalMatcher:
         assert algo.is_maximal()
 
     def test_rematch_after_deleting_matching_edge(self) -> None:
-        algo = MaximalMatcher(4, mode="basic")
+        algo = Matcher(4, mode="basic")
         algo.insert_edge(0, 1)
         algo.insert_edge(2, 3)
         assert algo.matching_size() == 2
@@ -768,16 +768,16 @@ class TestMaximalMatcher:
         assert (2, 3) in algo.get_matching()
 
     def test_multilevel_levels_exist(self) -> None:
-        algo = MaximalMatcher(50, mode="multilevel")
+        algo = Matcher(50, mode="multilevel")
         assert algo.k >= 1
         assert algo.system is not None
 
     def test_rematch_u_no_phantom_edge_from_stale_list(self) -> None:
         """Regression: a stale lambda list must not produce a phantom edge."""
-        from axiom.matcher import MaximalMatcher
+        from axiom.core import Matcher
         from axiom.types import canonical_edge
 
-        algo = MaximalMatcher(4, mode="basic")
+        algo = Matcher(4, mode="basic")
         algo.insert_edge(0, 1)
         algo.insert_edge(0, 2)
         algo.rebuild_basic()
@@ -796,13 +796,13 @@ class TestMaximalMatcher:
         # Ensure 1 and 2 are already matched so they are skipped.
         algo.matched_vertices.add(1)
         algo.matched_vertices.add(2)
-        algo._MaximalMatcher__rematch_u(0)
+        algo._Matcher__rematch_u(0)
         # Phantom edge (0,3) must not be added.
         assert canonical_edge(0, 3) not in algo.matched_edges
 
     def test_partition_m_color_range_error(self) -> None:
         """Regression: out-of-range colors from abb_edge_color must raise."""
-        algo = MaximalMatcher(4, mode="basic")
+        algo = Matcher(4, mode="basic")
         algo.insert_edge(0, 1)
         algo.insert_edge(1, 2)
         algo.rebuild_basic()
@@ -879,7 +879,7 @@ class TestSimulation:
             assert 0 <= v < 5
 
     def test_replay_updates(self) -> None:
-        algo = MaximalMatcher(4, mode="basic")
+        algo = Matcher(4, mode="basic")
         updates = [("insert", 0, 1), ("insert", 1, 2), ("delete", 0, 1)]
         replay_updates(algo, updates)
         assert algo.is_maximal()
@@ -895,7 +895,7 @@ class TestPerformance:
 
     def test_large_graph_basic(self) -> None:
         n = 100
-        algo = MaximalMatcher(n, mode="basic")
+        algo = Matcher(n, mode="basic")
         for i in range(n - 1):
             algo.insert_edge(i, i + 1)
         assert algo.is_maximal()
@@ -903,7 +903,7 @@ class TestPerformance:
 
     def test_large_graph_multilevel(self) -> None:
         n = 100
-        algo = MaximalMatcher(n, mode="multilevel")
+        algo = Matcher(n, mode="multilevel")
         for i in range(n - 1):
             algo.insert_edge(i, i + 1)
         assert algo.is_maximal()
@@ -911,7 +911,7 @@ class TestPerformance:
 
     def test_dense_graph_basic(self) -> None:
         n = 20
-        algo = MaximalMatcher(n, mode="basic")
+        algo = Matcher(n, mode="basic")
         for i in range(n):
             for j in range(i + 1, n):
                 algo.insert_edge(i, j)

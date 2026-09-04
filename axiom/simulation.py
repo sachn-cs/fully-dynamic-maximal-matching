@@ -3,7 +3,7 @@
 These helpers are engineering utilities, not part of the paper's baseline
 algorithm.  They allow reproducible experiments and stress tests by
 producing fixed ``(insert | delete, u, v)`` traces that can be replayed
-against any :class:`MaximalMatcher` instance.
+against any :class:`Matcher` instance.
 
 Determinism:
     * All randomness is drawn from the caller-supplied :class:`random.Random`
@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 from axiom.types import Vertex
 
 if TYPE_CHECKING:
-    from axiom.matcher import MaximalMatcher
+    from axiom.core import Matcher
 
 Update = tuple[str, Vertex, Vertex]
 """Type of one operation in a simulated trace.
@@ -84,7 +84,7 @@ def random_update_sequence(
         yielded += 1
 
 
-def replay_updates(algo: MaximalMatcher, updates: list[Update]) -> None:
+def replay_updates(algo: Matcher, updates: list[Update]) -> None:
     """Replay a prepared update sequence on ``algo``.
 
     Args:

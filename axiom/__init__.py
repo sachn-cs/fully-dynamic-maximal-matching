@@ -4,7 +4,7 @@ This package is a pure-Python reproduction of the deterministic fully
 dynamic maximal matching algorithm of Chuzhoy, Khanna, and Song
 (arXiv:2605.00797v1, STOC 2026).
 
-Two operating modes are exposed through :class:`MaximalMatcher`:
+Two operating modes are exposed through :class:`Matcher`:
 
 * ``"basic"`` -- :math:`\\tilde O(n^{2/3})` amortised update time via a
   single-level :math:`z`-subgraph system.
@@ -49,7 +49,7 @@ from axiom.coloring import (
 )
 from axiom.graph import DynamicGraph
 from axiom.invariants import check_maximal_matching, check_z_system_invariants
-from axiom.matcher import MaximalMatcher
+from axiom.core import Matcher
 from axiom.matching import build_partner_map, greedy_maximal_matching, partner_of
 from axiom.parallel import compare_modes, run_parallel_benchmarks
 from axiom.simulation import random_update_sequence, replay_updates
@@ -71,7 +71,7 @@ from axiom.z_system import (
 __version__ = "0.5.0"
 
 __all__ = [
-    "MaximalMatcher",
+    "Matcher",
     "DynamicGraph",
     "GreedyColorer",
     "VizingColorer",
