@@ -1,22 +1,20 @@
-"""Lightweight benchmark for FDMM update throughput.
+"""Lightweight benchmark for Axiom update throughput.
 
 This is an engineering utility, not part of the paper's baseline algorithm.
 Run with::
 
-    python benchmarks/bench_fdmm.py --n 200 --updates 5000 --mode basic
+    python benchmarks/bench_axiom.py --n 200 --updates 5000 --mode basic
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import random
 import sys
 import time
 
-_repo_root = __import__("os").path.dirname(__import__("os").path.dirname(__import__("os").path.abspath(__file__)))
-_src = __import__("os").path.join(_repo_root, "src")
-if _src not in sys.path:
-    sys.path.insert(0, _src)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from axiom.core import Matcher
 from axiom.simulation import random_update_sequence
@@ -35,31 +33,35 @@ def bench(n: int, mode: str, updates: int, seed: int) -> dict[str, float]:
             algo.delete(u, v)
     elapsed = time.perf_counter() - start
 
-    assert algo.maximal(), "matching is not maximal after benchmark sequence"
+    assert algo.maximal()
     stats = algo.stats()
+
     return {
-        "n": float(n),
+        "n": n,
         "mode": mode,
-        "updates": float(updates),
+        "updates": updates,
         "elapsed_sec": elapsed,
         "updates_per_sec": updates / elapsed if elapsed > 0 else float("inf"),
-        "matching_size": float(stats["matching_size"]),
-        "phase_rebuilds": float(stats.get("phase_rebuilds", 0)),
+        "matching_size": stats["matching_size"],
+        "is_maximal": algo.maximal(),
+        "phase_rebuilds": stats["phase_rebuilds"],
+        "subphase_rebuilds": stats["subphase_rebuilds"],
     }
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="FDMM benchmark")
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Axiom throughput benchmark")
     parser.add_argument("--n", type=int, default=100)
-    parser.add_argument("--mode", choices=["basic", "multilevel"], default="basic")
+    parser.add_argument("--mode", choices=["basic", "tiered"], default="basic")
     parser.add_argument("--updates", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=42)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     result = bench(args.n, args.mode, args.updates, args.seed)
     for k, v in result.items():
         print(f"{k}: {v}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
