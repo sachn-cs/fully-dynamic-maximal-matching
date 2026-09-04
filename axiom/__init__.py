@@ -51,11 +51,11 @@ from axiom.graph import Adjacency
 from axiom.invariant import check_maximal_matching, valid
 from axiom.core import Matcher
 from axiom.matching import partners, greedy, partner_in
-from axiom.parallel import compare_modes, run_parallel_benchmarks
+from axiom.parallel import compare, run_parallel
 from axiom.simulation import random_update_sequence, replay_updates
 from axiom.types import Edge, Colorer, Graph, Matching, Vertex, canonical
 from axiom.visualize import (
-    visualize_graph_adjacency,
+    visualize_adjacency,
     visualize_matching,
     visualize_system,
 )
@@ -92,9 +92,9 @@ __all__ = [
     "replay_updates",
     "visualize_system",
     "visualize_matching",
-    "visualize_graph_adjacency",
-    "run_parallel_benchmarks",
-    "compare_modes",
+    "visualize_adjacency",
+    "run_parallel",
+    "compare",
     "backtrack",
     "missing",
     "alternating",

@@ -153,7 +153,7 @@ def visualize_matching(algo: Matcher, width: int = 60) -> str:
     return "\n".join(lines)
 
 
-def visualize_graph_adjacency(algo: Matcher, width: int = 60) -> str:
+def visualize_adjacency(algo: Matcher, width: int = 60) -> str:
     """Return an ASCII adjacency list representation of the graph.
 
     Args:

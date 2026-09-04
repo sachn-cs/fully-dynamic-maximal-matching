@@ -10,7 +10,7 @@ Process / thread safety:
     * Each worker process builds and tears down its own
       :class:`Matcher` instance; nothing is shared
       across processes.
-    * The ``multiprocessing.Pool`` used by :func:`run_parallel_benchmarks`
+    * The ``multiprocessing.Pool`` used by :func:`run_parallel`
       forks its workers, so the algorithm must be safe to import
       without side effects.  This is ensured by the lack of mutable
       module-level state.
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class BenchmarkResult:
+class Benchmark:
     """Result from a single benchmark run.
 
     Attributes:
@@ -56,12 +56,12 @@ class BenchmarkResult:
     subphase_rebuilds: int
 
 
-def run_benchmark_worker(
+def worker(
     n: int,
     mode: str,
     updates: int,
     seed: int,
-) -> BenchmarkResult:
+) -> Benchmark:
     """Worker function for parallel benchmark execution.
 
     Built and discarded inside one worker process; no shared state.
@@ -83,7 +83,7 @@ def run_benchmark_worker(
     elapsed = time.perf_counter() - start
 
     stats = algo.stats()
-    return BenchmarkResult(
+    return Benchmark(
         n=n,
         mode=mode,
         updates=updates,
@@ -96,10 +96,10 @@ def run_benchmark_worker(
     )
 
 
-def run_parallel_benchmarks(
+def run_parallel(
     configs: list[tuple[int, str, int, int]],
     max_workers: int | None = None,
-) -> list[BenchmarkResult]:
+) -> list[Benchmark]:
     """Run multiple benchmarks in parallel.
 
     Each entry of ``configs`` describes one benchmark as a tuple
@@ -113,7 +113,7 @@ def run_parallel_benchmarks(
             which defaults to the number of CPU cores.
 
     Returns:
-        List of :class:`BenchmarkResult` objects in the same order as
+        List of :class:`Benchmark` objects in the same order as
         ``configs``.
 
     Example:
@@ -122,24 +122,24 @@ def run_parallel_benchmarks(
         ...     (100, "multilevel", 1000, 42),
         ...     (200, "basic", 1000, 42),
         ... ]
-        >>> results = run_parallel_benchmarks(configs)
+        >>> results = run_parallel(configs)
         >>> for r in results:
         ...     print(f"{r.mode}: {r.updates_per_sec:.0f} ops/sec")
     """
     with multiprocessing.Pool(processes=max_workers) as pool:
         results = pool.starmap(
-            run_benchmark_worker,
+            worker,
             configs,
         )
     return list(results)
 
 
-def compare_modes(
+def compare(
     n: int,
     updates: int,
     seed: int = 42,
     max_workers: int | None = None,
-) -> dict[str, BenchmarkResult]:
+) -> dict[str, Benchmark]:
     """Compare basic and multilevel modes on the same graph size.
 
     Runs the same update sequence (seeded identically) against both
@@ -155,11 +155,11 @@ def compare_modes(
 
     Returns:
         Dict mapping mode name (``"basic"`` / ``"multilevel"``) to
-        :class:`BenchmarkResult`.
+        :class:`Benchmark`.
     """
     configs = [
         (n, "basic", updates, seed),
         (n, "multilevel", updates, seed),
     ]
-    results = run_parallel_benchmarks(configs, max_workers)
+    results = run_parallel(configs, max_workers)
     return {r.mode: r for r in results}
