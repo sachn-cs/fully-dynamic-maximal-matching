@@ -499,9 +499,31 @@ class Matcher:
                 self.add_match(a, w)
                 return
 
+    def maintain_i3(self) -> int:
+        """Repair any violation of invariant (I3) in tiered mode.
+
+        Calls :meth:`Hierarchy.maintain_i3` on the active multi-level
+        system.  In basic mode, there is no I3 invariant and the
+        method is a no-op.
+
+        Returns:
+            The number of A_1 -> R_1 edges broken and rematched.
+            ``0`` in basic mode or when the invariant already holds.
+        """
+        if self.multi is None or self.system is None:
+            return 0
+        return self.multi.maintain_i3(
+            self.matched_edges,
+            self.phase_length,
+            self.z,
+            self.partner,
+            self.__rematch_vertex,
+        )
+
     def __advance_update_counter(self) -> None:
         self.update_count += 1
         self.__check_subphase_boundary()
+        self.maintain_i3()
 
         if self.update_count >= self.phase_length:
             self.policy.rebuild(self)
