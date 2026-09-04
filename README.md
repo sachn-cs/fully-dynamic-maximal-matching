@@ -79,7 +79,7 @@ pip install -e ".[dev]"
 ### Python API
 
 ```python
-from fdmm import DynamicMaximalMatching
+from maxmatch import DynamicMaximalMatching
 
 # Initialise on 100 vertices in basic mode
 algo = DynamicMaximalMatching(n=100, mode="basic")
@@ -115,8 +115,8 @@ python scripts/demo.py --n 20 --mode basic --updates 200
 ### Replay a Prepared Sequence
 
 ```python
-from fdmm import DynamicMaximalMatching
-from fdmm.simulation import random_update_sequence, replay_updates
+from maxmatch import DynamicMaximalMatching
+from maxmatch.simulation import random_update_sequence, replay_updates
 import random
 
 algo = DynamicMaximalMatching(50, mode="basic")
